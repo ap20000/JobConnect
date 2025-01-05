@@ -76,7 +76,7 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, platform  } = req.body;
 
     const user = await UserAuth.findOne({ email });
     
@@ -89,6 +89,13 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
+    // Enforce platform restrictions
+    if (user.role === "admin" && platform === "mobile") {
+      return res.status(403).json({ message: "User not found" });
+    }
+    if (user.role !== "admin" && platform === "web") {
+      return res.status(403).json({ message: "User not found" });
+    }
     const userCategory = user.category;
     const companyRole = user.companyRole || null;
     // Store user details in session
