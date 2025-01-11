@@ -10,7 +10,7 @@ const LoginPage = () => {
   const loginUser = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/user/login", {
+      const response = await axios.post("http://localhost:3001/user/login", {
         email,
         password,
         platform: "web", // Specify platform

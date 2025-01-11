@@ -21,8 +21,10 @@ dotenv.config();
 
 // Middleware
 app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true,
+  origin: "*", // Accept all origins
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allow common HTTP methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allow specific headers
+  credentials: true, // Allow credentials if needed
 }));
 app.use(express.json());
 app.use(morgan('combined'));
