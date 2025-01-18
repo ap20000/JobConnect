@@ -7,6 +7,7 @@ export const registerUser = async (req, res) => {
     userName, 
     email, 
     password, 
+    confirmPassword,
     location,
     category, 
     education, 
@@ -38,6 +39,8 @@ export const registerUser = async (req, res) => {
       userName,
       email,
       password: hashedPassword,
+      confirmPassword,
+      isProfileComplete: false, 
       category,
       image,
       location
@@ -65,7 +68,12 @@ export const registerUser = async (req, res) => {
     const newUser = new UserAuth(userFields);
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully", user: newUser });
+    res.status(201).json({ 
+      message: "User registered successfully", 
+      user: { userId: newUser._id, isProfileComplete: newUser.isProfileComplete } 
+    });
+
+    
 
   } catch (error) {
     console.error(error);

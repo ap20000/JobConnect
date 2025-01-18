@@ -3,10 +3,11 @@ import mongoose from "mongoose";
 const userModel = new mongoose.Schema({
 
   // Basic fields common for both Job Seeker and Company
-  name: { type: String, required: true, unique: true },
+  name: { type: String},
   userName: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  confirmPassword: { type: String },
   role: { type: String, default: 'user' }, // Defaults to 'user'
 image: { 
   type: String  // Default profile image path
@@ -18,7 +19,10 @@ category: {
   type: String, enum: ["job_seeker", "company"]
    // Default to 'job_seeker' if not provided
 },
-
+isProfileComplete: {
+    type: Boolean,
+    default: false, // Default is false for new users
+  },
 companyRole: {
     type: String,
     enum: ["job_creator", "job_manager"],

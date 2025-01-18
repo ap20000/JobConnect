@@ -6,7 +6,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import { dbConnect } from './mongo/dbConnection.js';
-import MongoStore from 'connect-mongo'; // Import MongoStore
 
 import session from 'express-session';
 
@@ -19,13 +18,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 dotenv.config();
 
-// Middleware
-app.use(cors({
-  origin: "*", // Accept all origins
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allow common HTTP methods
-  allowedHeaders: ["Content-Type", "Authorization"], // Allow specific headers
-  credentials: true, // Allow credentials if needed
-}));
+const corsOptions = {
+  origin: "http://localhost:5173", // Allow this specific origin
+  credentials: true,              // Allow cookies and credentials
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(morgan('combined'));
 
