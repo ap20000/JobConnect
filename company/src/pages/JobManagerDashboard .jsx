@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const CompanyManagerRegister = () => {
+const JobManagerDashboard = () => {
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
@@ -18,4 +18,4 @@ const CompanyManagerRegister = () => {
   );
 };
 
-export default CompanyManagerRegister;
+export default JobManagerDashboard;

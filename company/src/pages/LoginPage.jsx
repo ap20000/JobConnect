@@ -1,79 +1,70 @@
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate  } from "react-router-dom";
+import { Link } from "react-router-dom";
+import "../css/LoginPage.css";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
-  const navigate  = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      const response = await axios.post("/user/login", {
-        email,
-        password,
-      });
-
-      // Get user role and companyRole from response
-      const { role, companyRole } = response.data;
-
-      // Store token and user data in localStorage or context for later use
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", role);
-      localStorage.setItem("companyRole", companyRole);
-
-      // Redirect based on the company role
-      if (companyRole === "job_creator") {
-        navigate("/job-creator-dashboard");
-      } else if (companyRole === "job_manager") {
-        navigate("/job-manager-dashboard");
-      } else {
-        navigate("/dashboard"); // Default to some general dashboard if not a company role
-      }
-    } catch (err) {
-      setError("Login failed. Please check your credentials.");
-    }
+    console.log("Logging in with", email, password);
   };
 
   return (
-    <div className="container mt-5">
-      <h2 className="text-center mb-4">Login</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={handleLogin} className="p-4 border rounded bg-light">
-        <div className="mb-3">
-          <label htmlFor="email" className="form-label">
-            Email
-          </label>
+    <div className="flex h-screen bg-gray-900">
+      {/* Left Side */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-gray-600 text-white p-8">
+        <img src="/handshake-icon.png" alt="Handshake" className="mb-4 w-20 h-20" />
+        <h2 className="text-2xl font-bold">Welcome Back.</h2>
+        <p className="text-sm mt-2">You are just one step away to your feed.</p>
+      </div>
+      
+      {/* Right Side */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-white p-8">
+        <h2 className="text-2xl font-bold">Sign In</h2>
+        <form className="w-full max-w-sm mt-6" onSubmit={handleSubmit}>
+          <label className="block font-semibold">Email</label>
           <input
             type="email"
-            className="form-control"
-            id="email"
+            className="w-full p-2 border rounded mt-1"
+            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            required
           />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="password" className="form-label">
-            Password
-          </label>
+          
+          <label className="block font-semibold mt-4">Password</label>
           <input
             type="password"
-            className="form-control"
-            id="password"
+            className="w-full p-2 border rounded mt-1"
+            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            required
           />
+          
+          <div className="flex justify-between items-center mt-3">
+            <div className="flex items-center">
+              <input type="checkbox" className="mr-2" />
+              <span className="text-sm">Keep me logged in</span>
+            </div>
+            <Link to="/forgot-password" className="text-sm text-blue-500">Forgot Password?</Link>
+          </div>
+          
+          <button
+            type="submit"
+            className="w-full bg-black text-white p-2 mt-4 rounded"
+          >
+            Sign Up
+          </button>
+        </form>
+        
+        <p className="text-sm mt-4">Or, Use social media to sign in</p>
+        <div className="flex space-x-4 mt-3">
+          <button className="p-2 bg-gray-300 rounded">G</button>
+          <button className="p-2 bg-gray-300 rounded">A</button>
+          <button className="p-2 bg-gray-300 rounded">F</button>
         </div>
-
-        <button type="submit" className="btn btn-primary w-100">
-          Login
-        </button>
-      </form>
+      </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import UserAuth from "./models/userModel.js";
 import jwt from "jsonwebtoken";
+
 export const registerUser = async (req, res) => {
   const { 
     name,
@@ -9,12 +10,9 @@ export const registerUser = async (req, res) => {
     password, 
     confirmPassword,
     location,
-    category, 
     education, 
     skills, 
-    experience, 
-    companyName,
-    companyRole 
+    experience
   } = req.body;
 
   try {
@@ -31,9 +29,9 @@ export const registerUser = async (req, res) => {
 
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
-     const image = req.file ? `/${req.file.filename}` : null;
+    const image = req.file ? `/${req.file.filename}` : null;
 
-    // Create user object for both job seeker and company
+    // Create user object for job seekers only
     const userFields = {
       name,
       userName,
@@ -41,45 +39,29 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       confirmPassword,
       isProfileComplete: false, 
-      category,
+      category: "job_seeker", // Only job seekers can register
       image,
-      location
+      location,
+      education,
+      skills,
+      experience
     };
-
-    // If job seeker, add job seeker-specific fields
-    if (category === 'job_seeker') {
-      userFields.education=education;
-      userFields.skills = skills;
-      userFields.experience = experience;
-    }
-
-    // If company, add company-specific fields
-    if (category === 'company') {
-      if (!companyRole || !['job_creator', 'job_manager'].includes(companyRole)) {
-        return res.status(400).json({ 
-          error: "Company users must have a valid role: 'job_creator' or 'job_manager'" 
-        });
-      }
-      userFields.companyName = companyName;
-      userFields.companyRole = companyRole;
-    }
 
     // Save the new user to the database
     const newUser = new UserAuth(userFields);
     await newUser.save();
 
     res.status(201).json({ 
-      message: "User registered successfully", 
+      message: "Job seeker registered successfully", 
       user: { userId: newUser._id, isProfileComplete: newUser.isProfileComplete } 
     });
-
-    
 
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Server error" });
   }
 };
+
 
 
 export const loginUser = async (req, res) => {

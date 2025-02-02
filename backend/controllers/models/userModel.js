@@ -25,11 +25,11 @@ isProfileComplete: {
   },
 companyRole: {
     type: String,
-    enum: ["job_creator", "job_manager"],
+    enum: ["Hr", "manager"],
     required: function () {
       return this.category === "company";
     },
-    default: "job_creator", // Defaults to a job creator if not explicitly provided
+    default: "Hr", // Defaults to a job creator if not explicitly provided
   },
 
 // Fields specific to Job Seeker

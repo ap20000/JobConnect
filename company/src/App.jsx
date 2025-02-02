@@ -17,7 +17,7 @@ function App() {
       <Routes>
         {/* Define routes for your pages */}
         <Route path="/" element={<LoginPage />} />
-        <Route path="/" element={<CompanyRegisterForm />} />
+        {/* <Route path="/" element={<CompanyRegisterForm />} /> */}
         <Route path="/creator-dashboard" element={<JobCreatorDashboard />} />
         <Route path="/manager-dashboard" element={<JobManagerDashboard />} />
         <Route path="/manager-register" element={<CompanyManagerRegister />} />

@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.container {
+  @apply flex min-h-screen bg-gray-900 items-center justify-center;
+}
+
+.login-box {
+  @apply flex bg-white rounded-lg shadow-lg overflow-hidden w-3/5;
+}
+
+.left-panel {
+  @apply w-1/2 bg-gray-500 flex flex-col items-center justify-center p-8;
+}
+
+.right-panel {
+  @apply w-1/2 p-10;
+}
+
+.title {
+  @apply text-2xl font-bold text-gray-800;
+}
+
+.input-field {
+  @apply w-full p-3 mt-2 border border-gray-300 rounded-md;
+}
+
+.checkbox-label {
+  @apply text-sm text-gray-600;
+}
+
+.button {
+  @apply w-full mt-4 p-3 bg-gray-800 text-white font-bold rounded-md hover:bg-gray-700;
+}
+
+.social-buttons {
+  @apply flex justify-center space-x-4 mt-4;
+}
+
+.social-button {
+  @apply p-3 bg-gray-300 rounded-md;
+}
