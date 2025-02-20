@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import UserAuth from "./models/userModel.js";
 import jwt from "jsonwebtoken";
+import Application from "./models/Application.js";
 
 export const registerUser = async (req, res) => {
   const { 
@@ -83,17 +84,18 @@ export const loginUser = async (req, res) => {
     if (user.role === "admin" && platform === "mobile") {
       return res.status(403).json({ message: "User not found" });
     }
-    if (user.role !== "admin" && platform === "web") {
+    if (user.role !== "user" && platform === "web") {
       return res.status(403).json({ message: "User not found" });
     }
-    const userCategory = user.category;
-    const companyRole = user.companyRole || null;
+    // const userCategory = user.category;
+    // const companyRole = user.companyRole || null;
     // Store user details in session
     req.session.userId = user._id; // Store user ID in session
     req.session.role = user.role; // Store user role in session
+    req.session.companyRole = user.companyRole || null;
 
-    const token = jwt.sign({ userId: user._id, role: user.role,companyRole: companyRole }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    const token = jwt.sign({ userId: user._id, role: user.role,companyRole: user.companyRole }, process.env.JWT_SECRET, {
+      expiresIn: "2d",
     });
 
     
@@ -102,8 +104,8 @@ export const loginUser = async (req, res) => {
       message: "Login Successful",
       token,
       role: user.role, // Include the user's role in the response
-      category: userCategory,
-      companyRole: companyRole 
+      category: user.category,
+      companyRole: user.companyRole 
     });
   } catch (error) {
     console.error('Error during login:', error);
@@ -167,5 +169,75 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.error('Error updating user:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
+export const applyForJob = async (req, res) => {
+  try {
+    const { jobId } = req.params; // Job ID from request params
+    const userId = req.user.id; // Assuming the user is authenticated and stored in `req.user`
+    const { resume, coverLetter } = req.body;
+
+    // Validate required fields
+    if (!resume || !coverLetter) {
+      return res.status(400).json({ message: "Resume and cover letter are required." });
+    }
+
+    // Find the job
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+
+    // Check if the user already applied
+    const alreadyApplied = job.applicants.some((applicant) => applicant.userId.toString() === userId);
+    if (alreadyApplied) {
+      return res.status(400).json({ message: "You have already applied for this job." });
+    }
+
+    // Get user details
+    const user = await User.findById(userId).select("name location education email experience");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Add applicant details to the job
+    job.applicants.push({
+      userId,
+      resume,
+      coverLetter,
+      appliedAt: new Date(),
+    });
+
+    await job.save();
+
+    res.status(200).json({
+      message: "Job application submitted successfully!",
+      applicant: {
+        name: user.name,
+        location: user.location,
+        education: user.education,
+        email: user.email,
+        experience: user.experience,
+        resume,
+        coverLetter,
+      },
+    });
+  } catch (error) {
+    console.error("Error applying for job:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
+  }
+};
+
+
+// Get all jobs a user has applied for
+export const getUserAppliedJobs = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const applications = await Application.find({ userId }).populate("jobId", "title company location salary");
+    res.status(200).json(applications);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 };

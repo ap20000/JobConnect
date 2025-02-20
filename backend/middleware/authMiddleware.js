@@ -1,18 +1,27 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+import User from "../controllers/models/userModel.js";
 
-
-export const authenticateToken = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1]; // Assuming Bearer token format
+export const authenticateToken = async (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1];
 
   if (!token) {
-    return res.sendStatus(401); // Unauthorized if no token
+    return res.status(401).json({ message: "Unauthorized: No token provided." });
   }
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403); // Forbidden if token is invalid
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Decoded Token:", decoded); // Debugging: Check what is in the token
+
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized: User not found." });
     }
-    req.user = user; // Attach the user object to req
-    next();
-  });
+
+    console.log("Authenticated User:", user); // Debugging: Check user details
+    req.user = user; 
+    next(); 
+  } catch (error) {
+    console.error("Authentication error:", error);
+    res.status(403).json({ message: "Invalid token." });
+  }
 };

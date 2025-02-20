@@ -24,13 +24,10 @@ isProfileComplete: {
     default: false, // Default is false for new users
   },
 companyRole: {
-    type: String,
-    enum: ["Hr", "manager"],
-    required: function () {
-      return this.category === "company";
-    },
-    default: "Hr", // Defaults to a job creator if not explicitly provided
-  },
+  type: String,
+  enum: ["manager", "hr"], // ✅ Added "hr" as a valid value
+  default: "manager"
+},
 
 // Fields specific to Job Seeker
 

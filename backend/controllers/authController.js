@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'; 
-import bcrypt from 'bcryptjs';
+
 import UserAuth from "./models/userModel.js";
-import User from "./models/userModel.js";
+
 import jwt from "jsonwebtoken";
 import JobSeekerProfile from './models/jobSeekerProfile.js'; // Assuming you have a JobSeekerProfile model file
-import Job from './models/jobCreating.js'; // Adjust the import path as necessary
+ // Adjust the import path as necessary
 
 // Adjust the import path as necessary
 
@@ -207,78 +207,5 @@ export const jobSeeker = async (req, res) => {
 
 
 
-export const createJob = async (req, res) => {
-  try {
-    // Ensure the user is authenticated
-    const user = req.user; // Assumes authentication middleware sets `req.user`
-    
-    if (!user) {
-      return res.status(401).json({ nmessage: "Unauthorized. Please log in." });
-    }
-
-    // Check if the user is a company
-    if (user.category !== "company") {
-      return res.status(403).json({ message: "Only companies can create job postings." });
-    }
-
-    // Extract job details from the request body
-    const {
-      title,
-      description,
-      company,
-      location,
-      salary,
-      employmentType,
-      skills,
-    } = req.body;
-
-    // Check if all required fields are provided
-    if (!title || !description || !company || !location || !salary || !employmentType || !skills) {
-      return res.status(400).json({ message: "All required fields must be provided." });
-    }
-
-    // Create a new job object
-    const newJob = new Job({
-      title,
-      description,
-      company,
-      location,
-      salary,
-      employmentType,
-      skills,
-      postedBy: user._id, // Associate the job with the company's user ID
-    });
-
-    // Save the job to the database
-    await newJob.save();
-
-    // Respond with success message and job data
-    res.status(201).json({
-      message: "Job created successfully",
-      job: newJob,
-    });
-  } catch (error) {
-    console.error("Error creating job:", error);
-    res.status(500).json({
-      message: "An error occurred while creating the job",
-      error: error.message,
-    });
-  }
-};
 
 
-export const getAllJobs = async (req, res) => {
-  try {
-    // Fetch all jobs from the database
-    const jobs = await Job.find();
-
-    // Return the jobs in the response
-    res.status(200).json(jobs);
-  } catch (error) {
-    console.error("Error fetching jobs:", error);
-    res.status(500).json({
-      message: "An error occurred while fetching the jobs",
-      error: error.message,
-    });
-  }
-};

@@ -5,6 +5,7 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
+import companyRoutes from './routes/companyRoutes.js';
 import { dbConnect } from './mongo/dbConnection.js';
 
 import session from 'express-session';
@@ -21,11 +22,13 @@ dotenv.config();
 const corsOptions = {
   origin: "http://localhost:5173", // Allow this specific origin
   credentials: true,              // Allow cookies and credentials
+  allowedHeaders: ['Authorization', 'Content-Type'],
 };
 app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(morgan('combined'));
+app.use(express.urlencoded({ extended: true }));
 
 // Serve static files
 
@@ -42,6 +45,7 @@ app.use(session({
 
 // Routes
 app.use('/user', authRoutes);
+app.use("/company", companyRoutes);  
 
 // Serve index.html
 app.get('/', (req, res) => {

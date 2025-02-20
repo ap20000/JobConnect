@@ -1,32 +1,44 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LoginPage from "../src/pages/LoginPage";
-import CompanyRegisterForm from "./pages/CompanyRegisterForm";
-import JobCreatorDashboard from "./pages/JobCreatorDashboard ";
-import JobManagerDashboard from "./pages/JobManagerDashboard ";
-import CompanyManagerRegister from "./pages/CompanyManagerRegister";
-import axios from "axios"; 
+import CompanyRegisterForm from "../src/pages/CompanyRegisterForm";
+import JobCreatorDashboard from "../src/pages/CreateJob";
+import RegisterHR from "../src/pages/RegisterHR";
+import JobDetails from "../src/pages/JobDetails";
+import CreateJob from "../src/pages/CreateJob";
+import EmployerDashboard from "../src/pages/EmployerDashboard";
+import JobApplicants from "../src/pages/JobApplicants";
+
+import axios from "axios";
+import ManagerDashboard from "../src/pages/ManagerDashboard";
 
 // axios.defaults.baseURL = "http://192.168.1.8:3001";
-axios.defaults.baseURL = "http://100.64.207.248:3001";
+axios.defaults.baseURL = "http://localhost:3001";
 axios.defaults.withCredentials = true;
 
 function App() {
+   console.log('App component rendered');
   return (
     <Router>
       <Routes>
-        {/* Define routes for your pages */}
+        {/* First page (Login Page) */}
         <Route path="/" element={<LoginPage />} />
-        {/* <Route path="/" element={<CompanyRegisterForm />} /> */}
+
+        {/* Other Pages */}
+        <Route path="/register-company" element={<CompanyRegisterForm />} />
         <Route path="/creator-dashboard" element={<JobCreatorDashboard />} />
-        <Route path="/manager-dashboard" element={<JobManagerDashboard />} />
-        <Route path="/manager-register" element={<CompanyManagerRegister />} />
-        {/* Fallback route for undefined paths */}
+        <Route path="/register-hr" element={<RegisterHR />} />
+        <Route path="/job-details" element={<JobDetails />} />
+        <Route path="/create-job" element={<CreateJob />} />
+        <Route path="/employer-dashboard" element={<EmployerDashboard />} />
+        <Route path="/manager-dashboard" element={<ManagerDashboard />} />
+        <Route path="/job/:jobId/applicants" element={<JobApplicants />} />
+
+        {/* Fallback Route */}
         <Route path="*" element={<h1>404 - Page Not Found</h1>} />
       </Routes>
     </Router>
   );
 }
 
-
-export default App
+export default App;

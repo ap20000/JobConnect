@@ -36,9 +36,10 @@ const jobSchema = new mongoose.Schema({
   },
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'CompanyProfile', // Assuming you have an Employer model
+    ref: 'User', // Assuming you have an Employer model
   
   },
+  // employerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   applicants: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: "user ", required: true },
