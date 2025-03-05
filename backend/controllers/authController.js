@@ -1,7 +1,8 @@
 import mongoose from 'mongoose'; 
 
 import UserAuth from "./models/userModel.js";
-
+import Job from "./models/jobModel.js";
+// import User from "../models/userModel.js";
 import jwt from "jsonwebtoken";
 import JobSeekerProfile from './models/jobSeekerProfile.js'; // Assuming you have a JobSeekerProfile model file
  // Adjust the import path as necessary
@@ -28,62 +29,46 @@ import JobSeekerProfile from './models/jobSeekerProfile.js'; // Assuming you hav
 
 
 export const getUser = async (req, res) => {
-  try {
-    // Extract email from the request parameters or body
-    const { email } = req.params;
+   try {
+    const { email } = req.query;  // Get email from query
 
-    // Check if email is provided
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    // Fetch user details from the database using the email
-    const user = await UserAuth.findOne({ email }, "-password");
+    const user = await UserAuth.findOne({ email }).select("-password");  // Find user by email
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Base URL for images
-    
-
-    // Construct response object
     const userDetails = {
       id: user._id,
-      name:user.name,
+      name: user.name,
       email: user.email,
-      
       userName: user.userName,
       role: user.role,
       category: user.category,
-      image: `${user.image}`,
-      location:user.location,
+      image: user.image || "default-profile.png",
+      location: user.location || "Not available",
       createdAt: user.createdAt,
-      isVerified: user.isVerified
+      isVerified: user.isVerified,
     };
 
-    // Additional fields for job seekers
-    if (user.category === 'job_seeker') {
+    if (user.category === "job_seeker") {
       userDetails.education = user.education;
       userDetails.skills = user.skills;
       userDetails.experience = user.experience;
-    }
-
-    // Additional fields for companies
-    if (user.category === 'company') {
+    } else if (user.category === "company") {
       userDetails.companyName = user.companyName;
     }
 
-    // Send response with user details
-    res.status(200).json(userDetails);
-    
+    res.status(200).json(userDetails);  // Send back the user details
   } catch (error) {
-    console.error('Error fetching user details:', error);
+    console.error("Error fetching user details:", error);
     res.status(500).json({ message: "Error fetching user details", error: error.message });
   }
 };
-
-
-
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -139,7 +124,80 @@ export const deleteUser = async (req, res) => {
 };
 
 
+// import UserAuth from "../models/UserAuth";  // Make sure this is the correct path
 
+export const getHRCount = async (req, res) => {
+  try {
+    // Count users with the role of 'hr'
+    const hrCount = await UserAuth.countDocuments({ companyRole: "hr" });
+    console.log("HR Count from DB:", hrCount); // Log the count for HR
+    res.status(200).json({ count: hrCount });
+  } catch (error) {
+    console.error("Error fetching HR count:", error.message);
+    res.status(500).json({ error: "Server error fetching HR count" });
+  }
+};
+
+// Get Company count
+export const getCompanyCount = async (req, res) => {
+  try {
+    // Count users with the category of 'company'
+    const companyCount = await UserAuth.countDocuments({ category: "company" });
+    console.log("Company Count from DB:", companyCount); // Log the count for Company
+    res.status(200).json({ count: companyCount });
+  } catch (error) {
+    console.error("Error fetching company count:", error.message);
+    res.status(500).json({ error: "Server error fetching company count" });
+  }
+};
+
+// Get Manager count
+export const getManagerCount = async (req, res) => {
+  try {
+    // Count users with the companyRole of 'manager'
+    const managerCount = await UserAuth.countDocuments({ companyRole: "manager" });
+    console.log("Manager Count from DB:", managerCount); // Log the count for Manager
+    res.status(200).json({ count: managerCount });
+  } catch (error) {
+    console.error("Error fetching manager count:", error.message);
+    res.status(500).json({ error: "Server error fetching manager count" });
+  }
+};
+// Get all jobs
+// export const getAllJobs = async (req, res) => {
+//   try {
+//     const jobs = await Job.find(); // Assuming your jobs are in the Job model
+//     console.log("Jobs Data:", jobs); // Log job data for debugging
+//     res.status(200).json(jobs);
+//   } catch (error) {
+//     console.error("Error fetching jobs:", error.message);
+//     res.status(500).json({ error: "Server error fetching jobs" });
+//   }
+// };
+export const getAllJobsWithCompanyAndHR = async (req, res) => {
+  try {
+    // Fetch all jobs and populate associated company and postedBy fields (with HR role)
+    const jobs = await Job.find()
+      .populate({
+        path: "company",  // Populate company field
+        select: "name category",  // Only retrieve the company name and category
+        match: { category: "company" },  // Ensure it's a company type
+      })
+      .populate({
+        path: "postedBy",   // Populate the postedBy field (HR or employer)
+        select: "name  companyRole",  // Retrieve the HR's name, role, and companyRole
+        match: { companyRole: "hr" },  // Only return users with role 'hr'
+      });
+
+    // Log the jobs to check if the population worked
+    console.log(jobs);
+
+    res.status(200).json(jobs); // Send the response with populated jobs
+  } catch (error) {
+    console.error("Error fetching jobs:", error.message);
+    res.status(500).json({ error: "Server error" }); // Handle server errors
+  }
+};
 
 // // Controller function to handle job seeker profile creation
 export const jobSeeker = async (req, res) => {

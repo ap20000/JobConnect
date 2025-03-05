@@ -50,10 +50,10 @@ const CreateProfile = ({ route, navigation }) => {
     }
 
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      const token = await AsyncStorage.getItem('authToken');
       formData.append('email', email); // The email is passed from the Register screen
 
-      const response = await axios.post("http://192.168.1.69:3001/user/profile", formData, {
+      const response = await axios.post("/user/profile", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`,

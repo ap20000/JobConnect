@@ -1,19 +1,23 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import axios from 'axios';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+import axios from "axios";
 
+// Import Screens
 import Login from './screen/Login';
-import Profile from './screen/Profile';
-import JobSeekerProfile from './screen/JobSeekerProfile';
 import Register from './screen/Register';
-import HomeScreen from './screen/HomeScreen';
+import CompleteProfile from './screen/CompleteProfile';
+import JobSeekerProfile from './screen/JobSeekerProfile';
 import FirstScreen from './screen/FirstScreen';
-import JobListScreen from './screen/JobListScreen';
-import CompleteProfile from './screen/CompleteProfile ';
+import ApplyJobScreen from './screen/ApplyJobScreen';
+import JobDetailScreen from './screen/JobDetailScreen';
+import HomeTabs from "./screen/HomeTabs"; // Import Bottom Tab Navigation
 
-axios.defaults.baseURL = "http://192.168.1.75:3001";
+// Axios Config (Update your backend URL)
+// axios.defaults.baseURL = "http://100.64.218.51:3002";
 axios.defaults.withCredentials = true;
+
+axios.defaults.baseURL = "http://192.168.1.122:3001";
 
 
 const Stack = createStackNavigator();
@@ -21,16 +25,15 @@ const Stack = createStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Register">
-          <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="CompleteProfile" component={CompleteProfile} />
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="HomeScreen" component={HomeScreen} />
-            <Stack.Screen name="JobSeekerProfile" component={JobSeekerProfile} />
-            <Stack.Screen name="Profile" component={Profile} />
-            <Stack.Screen name="FirstScreen" component={FirstScreen} />
-            
-              <Stack.Screen name="JobListScreen" component={JobListScreen} />
+      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="CompleteProfile" component={CompleteProfile} />
+        <Stack.Screen name="HomeTabs" component={HomeTabs} />
+        <Stack.Screen name="JobSeekerProfile" component={JobSeekerProfile} />
+        <Stack.Screen name="FirstScreen" component={FirstScreen} />
+        <Stack.Screen name="ApplyJobScreen" component={ApplyJobScreen} />
+        <Stack.Screen name="JobDetailScreen" component={JobDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,128 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, Alert, ActivityIndicator, TextInput, Button } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { View, Text, Image, ActivityIndicator, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 const Profile = () => {
-  const [profile, setProfile] = useState(null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const [updatedName, setUpdatedName] = useState('');
-  const [updatedLocation, setUpdatedLocation] = useState('');
-  const [updatedImage, setUpdatedImage] = useState('');
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchUserProfile = async () => {
       try {
-        const email = await AsyncStorage.getItem('userEmail');
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem("authToken");
 
-        if (!email || !token) {
-          Alert.alert("Error", "User not authenticated.");
+        if (!token) {
+          Alert.alert("Error", "No token found, please log in again.");
           return;
         }
 
-        const response = await axios.get(`http://192.168.1.81:3001/user/users/${email}`, {
+        const userEmail = await AsyncStorage.getItem("userEmail"); // Get email from storage
+
+        if (!userEmail) {
+          Alert.alert("Error", "No email found, please log in again.");
+          return;
+        }
+
+        // Fetch user profile
+        const response = await axios.get(`/user/users?email=${userEmail}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        setProfile(response.data);
-        console.log('Fetched Profile:', response.data); // Add this line
-        setUpdatedName(response.data.name || '');
-        setUpdatedLocation(response.data.location || '');
-        setUpdatedImage(response.data.image || '');
+        setUser(response.data);
       } catch (error) {
-        Alert.alert("Error fetching profile", error.response?.data?.message || "An error occurred.");
+        console.error("Error fetching user profile:", error);
+        Alert.alert("Error", "Failed to fetch profile.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchUserProfile();
   }, []);
-
-  const handleUpdateProfile = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      const userId = profile.id; // Assuming profile has an _id field
-
-      const response = await axios.put(`http://192.168.1.81:3001/user/users/${userId}`, {
-        name: updatedName,
-        location: updatedLocation,
-        image: updatedImage,
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      setProfile(response.data.updatedUser);
-      Alert.alert("Success", "Profile updated successfully!");
-    } catch (error) {
-      Alert.alert("Error updating profile", error.response?.data?.message || "An error occurred.");
-    } finally {
-      setIsEditing(false);
-    }
-  };
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
-  if (!profile) {
-    return <Text>No profile data available.</Text>;
+  if (!user) {
+    return <Text>No user profile found</Text>;
   }
 
   return (
-    <View className="flex-1 p-5 bg-gray-100 items-center justify-center">
-      <View className="w-11/12 bg-white rounded-lg shadow-md items-center pb-5">
-        {/* Profile Image */}
-        <Image
-          source={{ uri: `http://192.168.1.81:3001/${profile.image}` }}
-          className="w-32 h-32 rounded-full -mt-16 border-4 border-white"
-        />
+    <View style={{ padding: 20, alignItems: "center" }}>
+      {/* Display User Image */}
+      <Image
+        source={{ uri: `http://192.168.1.122:3001/${user.image}` }} // Adjust this URL as needed
+        style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 10 }}
+      />
 
-        {/* Profile Fields */}
-        <View className="mt-5 px-5">
-          <Text className="text-lg font-bold mb-1">Name: <Text className="font-normal">{profile.name || "Not available"}</Text></Text>
-          <Text className="text-lg font-bold mb-1">Email: <Text className="font-normal">{profile.email || "Not available"}</Text></Text>
-          <Text className="text-lg font-bold mb-1">Location: <Text className="font-normal">{profile.location || "Not available"}</Text></Text>
-          <Text className="text-lg font-bold mb-1">Education: <Text className="font-normal">{profile.education || "Not available"}</Text></Text>
-          <Text className="text-lg font-bold mb-1">Year: <Text className="font-normal">{profile.year || "Not available"}</Text></Text>
-          <Text className="text-lg font-bold mb-1">Skills: <Text className="font-normal">{profile.skills?.join(', ') || "Not available"}</Text></Text>
-        </View>
+      {/* Display User Details */}
+      <Text>Name: {user.name}</Text>
+      <Text>Email: {user.email}</Text>
+      <Text>Username: {user.userName}</Text>
+      <Text>Role: {user.role}</Text>
+      <Text>Category: {user.category}</Text>
+      <Text>Location: {user.location || "Not available"}</Text>
+      <Text>Joined On: {new Date(user.createdAt).toDateString()}</Text>
 
-        {/* Update Button */}
-        <Button title="Edit Profile" onPress={() => setIsEditing(true)} />
+      {/* {user.category === "job_seeker" && (
+        <>
+          <Text>Education: {user.education || "Not provided"}</Text>
+          <Text>Skills: {user.skills?.length > 0 ? user.skills.join(", ") : "Not provided"}</Text>
+          <Text>Experience: {user.experience || "Not provided"}</Text>
+        </>
+      )} */}
 
-        {/* Update Form */}
-        {isEditing && (
-          <View className="mt-5 w-full px-5">
-            <TextInput
-              className="h-10 border border-gray-300 mb-3 p-2 rounded"
-              placeholder="Update Name"
-              value={updatedName}
-              onChangeText={setUpdatedName}
-            />
-            <TextInput
-              className="h-10 border border-gray-300 mb-3 p-2 rounded"
-              placeholder="Update Location"
-              value={updatedLocation}
-              onChangeText={setUpdatedLocation}
-            />
-            <TextInput
-              className="h-10 border border-gray-300 mb-3 p-2 rounded"
-              placeholder="Update Image URL"
-              value={updatedImage}
-              onChangeText={setUpdatedImage}
-            />
-            <Button title="Save Changes" onPress={handleUpdateProfile} />
-            <Button title="Cancel" onPress={() => setIsEditing(false)} />
-          </View>
-        )}
-      </View>
+      {user.category === "company" && <Text>Company: {user.companyName || "Not provided"}</Text>}
     </View>
   );
 };

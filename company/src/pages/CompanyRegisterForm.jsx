@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const CompanyRegisterForm = ( ) => {
+const CompanyRegisterForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     userName: "",
@@ -27,26 +27,24 @@ const CompanyRegisterForm = ( ) => {
     setSuccess(null);
 
     try {
-      // Explicitly pass the formData along with category: "company"
-      const response = await axios.post("http://localhost:3001/user/registerCompany", {
+      // Make the POST request with credentials enabled
+      const response = await axios.post("http://localhost:3001/company/registerCompany", {
         ...formData,
         category: "company",  // Ensure the category is company
+      }, {
+        withCredentials: true,  // Ensure credentials are sent
       });
 
       console.log("🔍 Backend Response:", response.data); // ✅ Log response
 
-      // Ensure the backend returns a companyId
-      
-
-      
       setSuccess("Company registered successfully!");
 
       setTimeout(() => {
         navigate("/"); // Redirect to home after successful registration
       }, 2000);
     } catch (err) {
-      console.error("⚠️ Registration Error:", err.response?.data || err.message);
       setError(err.response?.data?.error || err.message || "Something went wrong!");
+      console.error("⚠️ Registration Error:", err.response?.data || err.message);
     }
   };
 

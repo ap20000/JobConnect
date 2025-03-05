@@ -1,31 +1,55 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const navigate = useNavigate(); // Hook for navigation
 
   const loginUser = async () => {
     setLoading(true);
+    setError(""); // Clear previous errors
+
     try {
-      const response = await axios.post("http://localhost:3001/user/login", {
+      const response = await axios.post("http://192.168.1.122:3001/user/login", {
         email,
         password,
         platform: "web", // Specify platform
       });
 
-      const { token, category } = response.data;
+      console.log("API Response:", response.data);
 
-      if (!email || !token || !category) {
+      const { token, role } = response.data;
+
+      if (!email || !token || !role) {
         throw new Error("Invalid login response. Missing required data.");
       }
 
-      // Proceed with the navigation or dashboard setup based on the category
+      // Store token & role in localStorage
+      localStorage.setItem("authToken", token);
+      localStorage.setItem("userRole", role);
 
+      console.log("User Role:", role);
+
+      // Redirect based on role
+      if (role.toLowerCase() === "admin") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/user-dashboard");
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Login failed");
+      // Improved error handling for 403 Forbidden
+      console.error("Login Error:", error.response ? error.response.data : error.message);
+      if (error.response?.status === 403) {
+        setError(error.response?.data?.message || "Access restricted for this role on this platform");
+      } else {
+        setError("Login failed. Please try again.");
+      }
+
+      localStorage.clear(); // Clear stored data if login fails
     } finally {
       setLoading(false);
     }
@@ -57,7 +81,7 @@ const LoginPage = () => {
           disabled={loading}
           className="w-full px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? "Logging in..." : "Login"}
         </button>
       </div>
     </div>

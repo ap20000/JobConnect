@@ -1,7 +1,9 @@
 import bcrypt from 'bcryptjs';
 import UserAuth from "./models/userModel.js";
+import User from "./models/userModel.js";
 import jwt from "jsonwebtoken";
 import Application from "./models/Application.js";
+import Job from "./models/jobModel.js";
 
 export const registerUser = async (req, res) => {
   const { 
@@ -10,6 +12,7 @@ export const registerUser = async (req, res) => {
     email, 
     password, 
     confirmPassword,
+    role,  // Add role from request body
     location,
     education, 
     skills, 
@@ -18,8 +21,8 @@ export const registerUser = async (req, res) => {
 
   try {
     // Check required fields
-    if (!email || !password || !userName) {
-      return res.status(400).json({ error: "Username, email, and password are required" });
+    if (!email || !password || !userName ) {
+      return res.status(400).json({ error: "Username, email, password, and role are required" });
     }
 
     // Check if the user already exists
@@ -32,15 +35,15 @@ export const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const image = req.file ? `/${req.file.filename}` : null;
 
-    // Create user object for job seekers only
+    // Create user object with dynamic role
     const userFields = {
       name,
       userName,
       email,
       password: hashedPassword,
       confirmPassword,
-      isProfileComplete: false, 
-      category: "job_seeker", // Only job seekers can register
+      role, // Dynamically assign the role passed in the request
+      category: "job_seeker",  // Default category for job seekers (could be dynamic as well)
       image,
       location,
       education,
@@ -53,8 +56,8 @@ export const registerUser = async (req, res) => {
     await newUser.save();
 
     res.status(201).json({ 
-      message: "Job seeker registered successfully", 
-      user: { userId: newUser._id, isProfileComplete: newUser.isProfileComplete } 
+      message: `${role} registered successfully`,  // Role-specific message
+      user: { userId: newUser._id }
     });
 
   } catch (error) {
@@ -65,51 +68,82 @@ export const registerUser = async (req, res) => {
 
 
 
+// Ensure correct import
+
 export const loginUser = async (req, res) => {
   try {
-    const { email, password, platform  } = req.body;
+    const { email, password, platform } = req.body;
+
+    if (!email || !password || !platform) {
+      return res.status(400).json({ message: "Email, password, and platform are required." });
+    }
 
     const user = await UserAuth.findOne({ email });
-    
+
     if (!user) {
-      return res.status(404).json({ message: "Invalid email" });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(400).json({ message: "Invalid password" });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Enforce platform restrictions
-    if (user.role === "admin" && platform === "mobile") {
-      return res.status(403).json({ message: "User not found" });
+    // Restrict login based on platform
+    if ((user.role === "admin" || user.role === "company") && platform === "mobile") {
+      return res.status(403).json({ message: "Admins and companies cannot log in from mobile." });
     }
-    if (user.role !== "user" && platform === "web") {
-      return res.status(403).json({ message: "User not found" });
+
+    if (user.role === "user" && platform === "web") {
+      return res.status(403).json({ message: "Users cannot log in from the web." });
     }
-    // const userCategory = user.category;
-    // const companyRole = user.companyRole || null;
-    // Store user details in session
-    req.session.userId = user._id; // Store user ID in session
-    req.session.role = user.role; // Store user role in session
-    req.session.companyRole = user.companyRole || null;
 
-    const token = jwt.sign({ userId: user._id, role: user.role,companyRole: user.companyRole }, process.env.JWT_SECRET, {
-      expiresIn: "2d",
-    });
-
-    
+    // Generate a JWT token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, companyRole: user.companyRole || null },
+      process.env.JWT_SECRET,
+      { expiresIn: "2d" }
+    );
 
     res.status(200).json({
       message: "Login Successful",
       token,
-      role: user.role, // Include the user's role in the response
+      role: user.role,
       category: user.category,
-      companyRole: user.companyRole 
+      companyRole: user.companyRole || null,
     });
+
   } catch (error) {
-    console.error('Error during login:', error);
+    console.error("Error during login:", error);
     res.status(500).json({ message: "Failed to login user", error: error.message });
+  }
+};
+
+
+export const completeProfile = async (req, res) => {
+  const { userId } = req.params;
+  const { name, skills, education, experience, location } = req.body;
+  const image = req.file ? req.file.filename : null;
+
+  try {
+    const user = await UserAuth.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.name = name || user.name;
+    user.skills = skills || user.skills;
+    user.education = education || user.education;
+    user.experience = experience || user.experience;
+    user.location = location || user.location;
+    if (image) user.image = image;
+
+    await user.save();
+
+    res.status(200).json({ message: "Profile updated successfully", user });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
@@ -173,59 +207,68 @@ export const updateProfile = async (req, res) => {
 };
 
 
+// import Job from "../models/Job.js";
+// import User from "../models/User.js";
+
+// import Job from "../models/Job.js";
+// import User from "../models/User.js";
+
 export const applyForJob = async (req, res) => {
   try {
-    const { jobId } = req.params; // Job ID from request params
-    const userId = req.user.id; // Assuming the user is authenticated and stored in `req.user`
-    const { resume, coverLetter } = req.body;
+    console.log("Decoded user from token:", req.user); // Debugging line
 
-    // Validate required fields
-    if (!resume || !coverLetter) {
-      return res.status(400).json({ message: "Resume and cover letter are required." });
+    const { jobId } = req.body;
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized. Please log in." });
     }
+
+    const userId = req.user.id;
+
+    // Check if jobId and CV are provided
+    if (!req.file) return res.status(400).json({ message: "CV is required." });
+    if (!jobId) return res.status(400).json({ message: "Job ID is required." });
 
     // Find the job
     const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ message: "Job not found." });
-    }
+    if (!job) return res.status(404).json({ message: "Job not found." });
 
-    // Check if the user already applied
-    const alreadyApplied = job.applicants.some((applicant) => applicant.userId.toString() === userId);
-    if (alreadyApplied) {
+    // Check if user already applied
+    if (job.applicants.some(app => app.userId.toString() === userId)) {
       return res.status(400).json({ message: "You have already applied for this job." });
     }
 
-    // Get user details
+    // Find the user
     const user = await User.findById(userId).select("name location education email experience");
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+    if (!user) return res.status(404).json({ message: "User not found in the database." });
 
-    // Add applicant details to the job
-    job.applicants.push({
-      userId,
-      resume,
-      coverLetter,
-      appliedAt: new Date(),
-    });
-
+    // Save CV and update job
+    const cvUrl = `/uploadsCV/${req.file.filename}`;
+    job.applicants.push({ userId, cv: cvUrl, appliedAt: new Date() });
     await job.save();
 
-    res.status(200).json({
-      message: "Job application submitted successfully!",
-      applicant: {
-        name: user.name,
-        location: user.location,
-        education: user.education,
-        email: user.email,
-        experience: user.experience,
-        resume,
-        coverLetter,
-      },
-    });
+    res.status(200).json({ message: "Application submitted successfully!" });
+
   } catch (error) {
     console.error("Error applying for job:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+
+ // Import Job model
+
+// Controller to fetch all jobs
+export const AllJobs = async (req, res) => {
+  try {
+    const jobs = await Job.find().populate("company").populate("postedBy"); // Populate related data
+
+    if (!jobs.length) {
+      return res.status(404).json({ message: "No jobs found." });
+    }
+
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };

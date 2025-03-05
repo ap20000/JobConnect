@@ -8,7 +8,7 @@ const userModel = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   confirmPassword: { type: String },
-  role: { type: String, default: 'user' }, // Defaults to 'user'
+  role: { type: String, enum: ["admin", "user"],default: 'user' }, // Defaults to 'user'
 image: { 
   type: String  // Default profile image path
 },
@@ -19,14 +19,11 @@ category: {
   type: String, enum: ["job_seeker", "company"]
    // Default to 'job_seeker' if not provided
 },
-isProfileComplete: {
-    type: Boolean,
-    default: false, // Default is false for new users
-  },
+
 companyRole: {
   type: String,
   enum: ["manager", "hr"], // ✅ Added "hr" as a valid value
-  default: "manager"
+
 },
 
 // Fields specific to Job Seeker
@@ -66,6 +63,6 @@ companyName: {
 });
 
 // Creating the model from schema
-const user = mongoose.model("user", userModel);
+const user = mongoose.model("User", userModel);
 
 export default user;

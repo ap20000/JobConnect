@@ -39,7 +39,7 @@ const CreateJob = ({ employerId }) => {
     setMessage("Posting job...");
 
     try {
-      const response = await fetch("http://localhost:3001/company/createJob", {
+      const response = await fetch("http://localhost:3002/company/createJob", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

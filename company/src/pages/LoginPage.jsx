@@ -10,11 +10,21 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
+    setError(""); // Reset error message on each submit
 
     try {
-      localStorage.removeItem("authToken");
-      const response = await axios.post("/user/login", { email, password, platform: "web" });
+      localStorage.removeItem("authToken"); // Clear previous token
+
+      // Make the API request
+      const response = await axios.post("http://192.168.1.122:3001/user/login",
+        { email, password, platform: "web" },
+        {
+          withCredentials: true, // Required for sending cookies or tokens
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.status === 200) {
         const { token, role, companyRole } = response.data;
@@ -22,15 +32,22 @@ const LoginPage = () => {
         // Store token in localStorage
         localStorage.setItem("authToken", token);
 
-        // Redirect based on role
+        // Redirect based on user role
         if (companyRole === "hr") {
-          navigate("/employer-dashboard"); // Redirect HR to Employer Dashboard
+          navigate("/employer-dashboard"); // HR users go to employer dashboard
         } else {
-          navigate("/manager-dashboard"); // Redirect other users to Manager Dashboard
+          navigate("/manager-dashboard"); // Other users go to manager dashboard
         }
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      // Handle different error types
+      if (err.response) {
+        setError(err.response.data?.message || "Login failed. Please try again.");
+      } else if (err.request) {
+        setError("Network error. Please check your connection.");
+      } else {
+        setError("An unexpected error occurred.");
+      }
     }
   };
 
@@ -59,6 +76,7 @@ const LoginPage = () => {
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <label className="block font-semibold mt-4">Password</label>
@@ -68,6 +86,7 @@ const LoginPage = () => {
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <button type="submit" className="w-full bg-black text-white p-2 mt-4 rounded">

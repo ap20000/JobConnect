@@ -13,7 +13,7 @@ const isEmployer = (req, res, next) => {
 };
 
 const isJobSeeker = (req, res, next) => {
-  if (req.user.role === "jobSeeker") {
+  if (req.user.role === "job_seeker") {
     return next();
   }
   return res.status(403).json({ message: "Access Denied: Only job seekers can apply for jobs." });

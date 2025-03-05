@@ -10,7 +10,8 @@ const jobSchema = new mongoose.Schema({
     required: true,
   },
   company: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId, // Updated to ObjectId for referencing the User model (or a Company model)
+    ref: 'User', // Reference to the User model (if companies are users)
     required: true,
   },
   location: {
@@ -37,12 +38,14 @@ const jobSchema = new mongoose.Schema({
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User', // Assuming you have an Employer model
-  
   },
-  // employerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   applicants: [
     {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: "user ", required: true },
+      userId: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "User", // Fixed the extra space here
+        required: true 
+      },
       resume: { type: String, required: true },
       coverLetter: { type: String, required: true },
       appliedAt: { type: Date, default: Date.now },
@@ -51,6 +54,5 @@ const jobSchema = new mongoose.Schema({
 });
 
 const Job = mongoose.model('Job', jobSchema);
-
 
 export default Job;

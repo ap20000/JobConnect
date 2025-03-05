@@ -29,7 +29,7 @@ const Login = () => {
   const loginUser = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/user/login", { email, password });
+      const response = await axios.post("/user/login", { email, password, platform: "mobile" });
 
       // Extract data safely
       const { token, category } = response.data;
@@ -41,9 +41,10 @@ const Login = () => {
 
       // Store valid values in AsyncStorage
       await AsyncStorage.setItem("userEmail", email);
-      await AsyncStorage.setItem("userToken", token);
+      await AsyncStorage.setItem("authToken", token);
       await AsyncStorage.setItem("userCategory", category);
 
+      // await AsyncStorage.setItem("authToken", data.token);
       Alert.alert("Login successful");
 
       // Clear the inputs
@@ -53,10 +54,7 @@ const Login = () => {
       // Navigate to screens based on category
       if (category === "job_seeker") {
         console.log("Navigating to HomeScreen");
-        navigation.navigate("HomeScreen", { email });
-      } else if (category === "company") {
-        console.log("Navigating to CompanyHome");
-        navigation.navigate("CompanyHome", { email });
+        navigation.navigate("HomeTabs", { email });
       } else {
         throw new Error("Unknown user category.");
       }

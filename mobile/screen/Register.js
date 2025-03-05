@@ -36,7 +36,7 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('http://192.168.1.75:3001/user/register', {
+      const response = await fetch('/user/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -49,12 +49,8 @@ const Register = () => {
       if (response.ok) {
         Alert.alert('Success', 'Registration successful');
         
-        if (data.user.isProfileComplete === false) {
-            navigation.navigate('CompleteProfile', { userId: data.user.userId });
-        } else {
-            navigation.navigate('Login');
-        }
-
+        // Navigate to the complete profile page with the user ID
+        navigation.navigate('CompleteProfile', { userId: data.user.userId });
       } else {
         setError(data.error || 'An error occurred.');
       }

@@ -12,8 +12,8 @@ import JobApplicants from "../src/pages/JobApplicants";
 import axios from "axios";
 import ManagerDashboard from "../src/pages/ManagerDashboard";
 
-// axios.defaults.baseURL = "http://192.168.1.8:3001";
 axios.defaults.baseURL = "http://localhost:3001";
+// axios.defaults.baseURL = "http://100.64.218.51:3002";
 axios.defaults.withCredentials = true;
 
 function App() {

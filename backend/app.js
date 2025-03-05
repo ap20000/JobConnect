@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import companyRoutes from './routes/companyRoutes.js';
 import { dbConnect } from './mongo/dbConnection.js';
+import multer from "multer";
 
 import session from 'express-session';
 
@@ -17,14 +18,36 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+app.use(cors());
 dotenv.config();
 
+// const cors = require("cors");
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "http://192.168.1.122:5173",
+  "http://192.168.1.122:3000",
+];
+
 const corsOptions = {
-  origin: "http://localhost:5173", // Allow this specific origin
-  credentials: true,              // Allow cookies and credentials
+  origin: function (origin, callback) {
+    // Allow requests from specific origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,  // Allow cookies to be sent
   allowedHeaders: ['Authorization', 'Content-Type'],
 };
+
+// Enable CORS middleware for all routes
 app.use(cors(corsOptions));
+
+// To handle preflight OPTIONS requests
+// app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(morgan('combined'));
@@ -33,6 +56,10 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 
 app.use(express.static(path.join(__dirname, "/uploads")));
+// app.use(express.static(path.join(__dirname, "/Cvupload")));
+// app.use("/Cvupload", express.static("uploadsCV"));
+const uploadsPath = path.join(__dirname, 'uploadsCV');
+app.use(express.static(uploadsPath));
 
 
 app.use(session({
@@ -52,6 +79,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'register.html'));
 });
 
+
 // Database connection
 dbConnect();
 
@@ -59,3 +87,6 @@ dbConnect();
 app.listen(process.env.PORT, () => {
   console.log(`Server Connected Successfully on PORT ${process.env.PORT}`);
 });
+
+// import path from "path";
+
