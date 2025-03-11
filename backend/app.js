@@ -10,7 +10,7 @@ import { dbConnect } from './mongo/dbConnection.js';
 import multer from "multer";
 
 import session from 'express-session';
-
+// import Application from './models/Application';
 // Corrected line
 // Assuming you have a User model
 
@@ -18,33 +18,19 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(cors());
+
 dotenv.config();
 
 // const cors = require("cors");
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "http://192.168.1.122:5173",
-  "http://192.168.1.122:3000",
-];
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests from specific origins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,  // Allow cookies to be sent
-  allowedHeaders: ['Authorization', 'Content-Type'],
-};
-
-// Enable CORS middleware for all routes
-app.use(cors(corsOptions));
+app.options("*", cors());
 
 // To handle preflight OPTIONS requests
 // app.options('*', cors(corsOptions));
@@ -59,7 +45,7 @@ app.use(express.static(path.join(__dirname, "/uploads")));
 // app.use(express.static(path.join(__dirname, "/Cvupload")));
 // app.use("/Cvupload", express.static("uploadsCV"));
 const uploadsPath = path.join(__dirname, 'uploadsCV');
-app.use(express.static(uploadsPath));
+app.use('/uploadsCV', express.static(uploadsPath));
 
 
 app.use(session({

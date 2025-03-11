@@ -4,7 +4,9 @@ import LoginPage from '../src/pages/LoginPage';
 import AdminDashboard from '../src/pages/AdminDashboard';
 import UserDetails from '../src/pages/UserDetaiils';
 import CompanyDetails from '../src/pages/CompanyDetails';
-
+import axios from "axios";
+axios.defaults.baseURL = "http://100.64.219.21:3001";
+axios.defaults.withCredentials = true;
 function App() {
   return (
     <Router>

@@ -10,16 +10,17 @@ const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error message on each submit
+    setError(""); // Reset error on each submit
 
     try {
-      localStorage.removeItem("authToken"); // Clear previous token
+      localStorage.removeItem("authToken"); // Clear any previous token
 
-      // Make the API request
-      const response = await axios.post("http://192.168.1.122:3001/user/login",
+      // Make the API request to the backend (use full URL)
+      const response = await axios.post(
+        "http://localhost:3001/user/login",   // ✅ Explicit backend URL
         { email, password, platform: "web" },
         {
-          withCredentials: true, // Required for sending cookies or tokens
+          withCredentials: true, // ✅ Required for cookies/session handling
           headers: {
             "Content-Type": "application/json",
           },
@@ -29,20 +30,22 @@ const LoginPage = () => {
       if (response.status === 200) {
         const { token, role, companyRole } = response.data;
 
-        // Store token in localStorage
+        // ✅ Store token securely
         localStorage.setItem("authToken", token);
 
-        // Redirect based on user role
+        // ✅ Redirect based on role
         if (companyRole === "hr") {
-          navigate("/employer-dashboard"); // HR users go to employer dashboard
+          navigate("/employer-dashboard");
         } else {
-          navigate("/manager-dashboard"); // Other users go to manager dashboard
+          navigate("/manager-dashboard");
         }
       }
     } catch (err) {
-      // Handle different error types
+      console.error("Login error:", err);
+
+      // ✅ Handle different error types
       if (err.response) {
-        setError(err.response.data?.message || "Login failed. Please try again.");
+        setError(err.response.data?.message || "Invalid email or password.");
       } else if (err.request) {
         setError("Network error. Please check your connection.");
       } else {
@@ -52,7 +55,6 @@ const LoginPage = () => {
   };
 
   const handleRegister = () => {
-    // Redirect to the register page
     navigate("/register-company");
   };
 

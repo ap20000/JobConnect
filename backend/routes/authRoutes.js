@@ -3,11 +3,11 @@ import { uploadsCV } from "../middleware/uploadMiddleware.js";  // Import the ex
 import multer from "multer";
 
 import {
-  jobSeeker, getUser, getAllUsers, getUserCount, deleteUser, getCompanyCount, getManagerCount, getHRCount, getAllJobsWithCompanyAndHR
+  jobSeeker,  getAllUsers, getUserCount, deleteUser, getCompanyCount, getManagerCount, getHRCount, getAllJobsWithCompanyAndHR
 } from "../controllers/authController.js";
 
 import {
-  registerUser, loginUser, resetPassword, updateProfile, applyForJob, getUserAppliedJobs, AllJobs, completeProfile
+  registerUser, loginUser, resetPassword, updateProfile, applyForJob, getUserAppliedJobs, AllJobs, completeProfile, checkApplicationStatus,searchJobs, saveJob, getSavedJobs,getUser
 } from "../controllers/userController.js";
 
 import { 
@@ -38,13 +38,17 @@ const router = Router();
 router.post("/register",  registerUser);
 router.post("/login", loginUser);
 router.post("/reset", resetPassword);
-router.post("/completeProfile/:userId", upload.single("image"), completeProfile); 
+router.post("/completeProfile/:userId", upload.fields([{ name: "image", maxCount: 1 }, { name: "cv", maxCount: 1 }]), completeProfile);
 
 // Job Seeker Routes
 router.get("/users", authenticateToken, getUser);
 router.post("/profile", authenticateToken, isJobSeeker, jobSeeker);
 router.post("/applyJob", authenticateToken, uploadsCV.single("cv"), applyForJob);
 router.get("/user/appliedJobs/:userId", authenticateToken, isJobSeeker, getUserAppliedJobs);
+router.get("/job/:jobId/applicationStatus", authenticateToken, checkApplicationStatus);
+router.get('/search', searchJobs);
+router.post("/save/:jobId", authenticateToken, saveJob);// Save a job
+router.get("/saved", authenticateToken, getSavedJobs); 
 
 // Employer Routes
 router.post("/registerCompany", registerCompany);

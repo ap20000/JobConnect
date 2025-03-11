@@ -1,104 +1,83 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import jwtDecode from "jwt-decode";
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import jwtDecode from 'jwt-decode';
+import { useNavigate } from 'react-router-dom';
 
 const JobDetails = () => {
-  // State management
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
+  const token = localStorage.getItem('authToken');
+  const navigate = useNavigate();
 
-  // Get token from localStorage
-  const token = localStorage.getItem("authToken");
-
-  // Effect to fetch jobs on component mount
   useEffect(() => {
-    // Check if token exists
     if (!token) {
-      setError("No token found, please login.");
+      setError('No token found, please login.');
       setLoading(false);
       return;
     }
 
-    // Decode token to check validity
     try {
       const decoded = jwtDecode(token);
-      console.log("Decoded Token:", decoded);
 
-      // Optional: Check token expiration
       if (decoded.exp * 1000 < Date.now()) {
-        setError("Session expired. Please log in again.");
+        setError('Session expired. Please log in again.');
         setLoading(false);
         return;
       }
 
-      // Fetch jobs if token is valid
       fetchEmployerJobs(token);
     } catch (err) {
-      console.error("Error decoding token:", err);
-      setError("Invalid token, please login again.");
+      setError('Invalid token, please login again.');
       setLoading(false);
     }
   }, [token]);
 
-  // Function to fetch jobs
   const fetchEmployerJobs = async (token) => {
     setLoading(true);
+    setError('');
 
     try {
-      // Make GET request to backend
-      const response = await axios.get("http://localhost:3001/company/jobs", {
+      const response = await axios.get('http://localhost:3001/company/jobs', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("API Response:", response.data);
-
-      // Handle no jobs case
-      if (!response.data.jobs || response.data.jobs.length === 0) {
-        setError("No jobs found.");
-        setLoading(false);
-        return;
+      if (!response.data || !response.data.jobs || response.data.jobs.length === 0) {
+        setError('No jobs found.');
+      } else {
+        setJobs(response.data.jobs);
       }
-
-      // Set jobs state
-      setJobs(response.data.jobs);
+      setLoading(false);
     } catch (err) {
-      console.error("Error fetching jobs:", err);
-      setError(err.response?.data?.message || "Failed to fetch jobs.");
-    } finally {
+      setError(err.response?.data?.message || 'Failed to fetch jobs.');
       setLoading(false);
     }
   };
 
-  // Function to handle job deletion
   const handleDeleteJob = async (jobId) => {
-    if (window.confirm("Are you sure you want to delete this job?")) {
+    if (window.confirm('Are you sure you want to delete this job?')) {
       try {
-        // Send DELETE request to backend
-        await axios.delete(`http://localhost:3001/company/job/${jobId}`, {
+        await axios.delete(`http://localhost:3001/company/jobs/${jobId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Remove deleted job from UI
         setJobs((prevJobs) => prevJobs.filter((job) => job._id !== jobId));
-
-        alert("Job deleted successfully!");
+        alert('Job deleted successfully!');
       } catch (err) {
-        console.error("Error deleting job:", err);
-        alert("Failed to delete job.");
+        alert('Failed to delete job.');
       }
     }
   };
 
-  // Render loading state
-  if (loading) return <p>Loading jobs...</p>;
+  const handleViewApplicants = (jobId) => {
+    navigate(`/jobs/${jobId}/applicants`);  // Use URL with `/jobs/:jobId/applicants`
+  };
 
-  // Render error state
+  if (loading) return <p>Loading jobs...</p>;
   if (error) return <p>{error}</p>;
 
-  // Render job listings
   return (
-    <div style={{ maxWidth: "800px", margin: "auto", padding: "20px" }}>
+    <div style={{ maxWidth: '800px', margin: 'auto', padding: '20px' }}>
       <h1>My Job Listings</h1>
       {jobs.length === 0 ? (
         <p>No jobs available.</p>
@@ -123,9 +102,15 @@ const JobDetails = () => {
                 <td>
                   <button
                     onClick={() => handleDeleteJob(job._id)}
-                    style={{ backgroundColor: "red", color: "white" }}
+                    style={{ backgroundColor: 'red', color: 'white' }}
                   >
                     Delete
+                  </button>
+                  <button
+                    onClick={() => handleViewApplicants(job._id)}
+                    style={{ backgroundColor: 'blue', color: 'white', marginLeft: '10px' }}
+                  >
+                    View Applicants
                   </button>
                 </td>
               </tr>

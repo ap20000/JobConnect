@@ -28,47 +28,7 @@ import JobSeekerProfile from './models/jobSeekerProfile.js'; // Assuming you hav
 
 
 
-export const getUser = async (req, res) => {
-   try {
-    const { email } = req.query;  // Get email from query
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const user = await UserAuth.findOne({ email }).select("-password");  // Find user by email
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const userDetails = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      userName: user.userName,
-      role: user.role,
-      category: user.category,
-      image: user.image || "default-profile.png",
-      location: user.location || "Not available",
-      createdAt: user.createdAt,
-      isVerified: user.isVerified,
-    };
-
-    if (user.category === "job_seeker") {
-      userDetails.education = user.education;
-      userDetails.skills = user.skills;
-      userDetails.experience = user.experience;
-    } else if (user.category === "company") {
-      userDetails.companyName = user.companyName;
-    }
-
-    res.status(200).json(userDetails);  // Send back the user details
-  } catch (error) {
-    console.error("Error fetching user details:", error);
-    res.status(500).json({ message: "Error fetching user details", error: error.message });
-  }
-};
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -220,7 +180,7 @@ export const jobSeeker = async (req, res) => {
       subject,
       skills,
       experience,
-      resume,
+      cv,
     } = req.body;
 
     // Check if required fields are provided

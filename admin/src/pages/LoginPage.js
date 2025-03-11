@@ -14,7 +14,7 @@ const LoginPage = () => {
     setError(""); // Clear previous errors
 
     try {
-      const response = await axios.post("http://192.168.1.122:3001/user/login", {
+      const response = await axios.post("/user/login", {
         email,
         password,
         platform: "web", // Specify platform

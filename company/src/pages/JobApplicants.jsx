@@ -1,69 +1,68 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import axios from "axios";
+import { useParams } from "react-router-dom"; // To access the jobId from the URL
 
 const JobApplicants = () => {
-  const { jobId } = useParams(); // Get job ID from URL
-  const [applicants, setApplicants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { jobId } = useParams(); // Extract jobId from the URL
+  const [applicants, setApplicants] = useState([]); // State to hold the applicants data
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(""); // Error state
+
+  const token = localStorage.getItem("token"); // Get token from local storage
 
   useEffect(() => {
     const fetchApplicants = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/job/${jobId}/applicants`);
-        setApplicants(response.data);
+        const response = await axios.get(
+          `http://localhost:3001/company/job/${jobId}/applicants`, // Update with correct API endpoint
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Include token in request header
+            },
+          }
+        );
+        setApplicants(response.data); // Set applicants data
         setLoading(false);
       } catch (err) {
-        setError(err.response?.data?.message || "Error fetching applicants.");
+        setError("Error fetching applicants.");
         setLoading(false);
       }
     };
 
-    if (jobId) {
+    if (token) {
       fetchApplicants();
+    } else {
+      setError("Unauthorized. Please log in.");
+      setLoading(false);
     }
-  }, [jobId]);
+  }, [jobId, token]);
 
   if (loading) return <p>Loading applicants...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (applicants.length === 0) return <p>No applicants found for this job.</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div>
-      <h2>Job Applicants</h2>
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Location</th>
-            <th>Education</th>
-            <th>Email</th>
-            <th>Experience</th>
-            <th>CV</th>
-          </tr>
-        </thead>
-        <tbody>
+      <h1>Applicants for Job: {jobId}</h1>
+      {applicants.length === 0 ? (
+        <p>No applicants for this job.</p>
+      ) : (
+        <ul>
           {applicants.map((applicant) => (
-            <tr key={applicant._id}>
-              <td>{applicant.userId?.name || "N/A"}</td>
-              <td>{applicant.userId?.location || "N/A"}</td>
-              <td>{applicant.userId?.education || "N/A"}</td>
-              <td>{applicant.userId?.email || "N/A"}</td>
-              <td>{applicant.userId?.experience || "N/A"} years</td>
-              <td>
-                {applicant.userId?.cv ? (
-                  <a href={applicant.userId.cv} target="_blank" rel="noopener noreferrer">
-                    Download CV
-                  </a>
-                ) : (
-                  "No CV uploaded"
-                )}
-              </td>
-            </tr>
+            <li key={applicant._id}>
+              <h3>{applicant.userId?.name}</h3>
+              <p>Email: {applicant.userId?.email}</p>
+              <p>Experience: {applicant.userId?.experience}</p>
+              <p>Location: {applicant.userId?.location}</p>
+              <p>Education: {applicant.userId?.education}</p>
+              {applicant.userId?.cv && (
+                <a href={applicant.userId.cv} target="_blank" rel="noopener noreferrer">
+                  View CV
+                </a>
+              )}
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
     </div>
   );
 };

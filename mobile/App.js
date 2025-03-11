@@ -11,10 +11,11 @@ import JobSeekerProfile from './screen/JobSeekerProfile';
 import FirstScreen from './screen/FirstScreen';
 import ApplyJobScreen from './screen/ApplyJobScreen';
 import JobDetailScreen from './screen/JobDetailScreen';
+import SavedJobs from './screen/SavedJobs';
 import HomeTabs from "./screen/HomeTabs"; // Import Bottom Tab Navigation
 
 // Axios Config (Update your backend URL)
-// axios.defaults.baseURL = "http://100.64.218.51:3002";
+// axios.defaults.baseURL = "http://100.64.219.21:3001";
 axios.defaults.withCredentials = true;
 
 axios.defaults.baseURL = "http://192.168.1.122:3001";
@@ -34,6 +35,7 @@ const App = () => {
         <Stack.Screen name="FirstScreen" component={FirstScreen} />
         <Stack.Screen name="ApplyJobScreen" component={ApplyJobScreen} />
         <Stack.Screen name="JobDetailScreen" component={JobDetailScreen} />
+            <Stack.Screen name="SavedJobs" component={SavedJobs} />
       </Stack.Navigator>
     </NavigationContainer>
   );

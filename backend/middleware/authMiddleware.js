@@ -12,6 +12,7 @@ export const authenticateToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; // Store the decoded user data in the request
+    console.log("Decoded user:", req.user); // Log to check the decoded user data
     next();
   } catch (error) {
     console.error("Token verification error:", error);

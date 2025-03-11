@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { styled } from 'nativewind';
+import axios from 'axios';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -36,26 +37,22 @@ const Register = () => {
     }
 
     try {
-      const response = await fetch('/user/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, userName, password }),
+      const response = await axios.post('/user/register', {
+        email,
+        userName,
+        password
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (response.status === 201) {
         Alert.alert('Success', 'Registration successful');
         
         // Navigate to the complete profile page with the user ID
-        navigation.navigate('CompleteProfile', { userId: data.user.userId });
+        navigation.navigate('CompleteProfile', { userId: response.data.user.userId });
       } else {
-        setError(data.error || 'An error occurred.');
+        setError(response.data.error || 'An error occurred.');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Axios error:', err.response ? err.response.data : err);
       setError('Something went wrong.');
     }
   };
@@ -65,18 +62,23 @@ const Register = () => {
       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
         <StyledText className="text-xl font-bold mb-6">Student Register</StyledText>
 
+        {/* Email */}
         <StyledTextInput
           className="border border-gray-300 p-3 rounded mb-4"
           placeholder="Email"
           value={formData.email}
           onChangeText={(value) => handleChange('email', value)}
         />
+
+        {/* Username */}
         <StyledTextInput
           className="border border-gray-300 p-3 rounded mb-4"
           placeholder="Username"
           value={formData.userName}
           onChangeText={(value) => handleChange('userName', value)}
         />
+
+        {/* Password */}
         <StyledTextInput
           className="border border-gray-300 p-3 rounded mb-4"
           placeholder="Password"
@@ -84,6 +86,8 @@ const Register = () => {
           value={formData.password}
           onChangeText={(value) => handleChange('password', value)}
         />
+
+        {/* Confirm Password */}
         <StyledTextInput
           className="border border-gray-300 p-3 rounded mb-4"
           placeholder="Confirm Password"
@@ -92,8 +96,10 @@ const Register = () => {
           onChangeText={(value) => handleChange('confirmPassword', value)}
         />
 
+        {/* Error Message */}
         {error && <StyledText className="text-red-500 text-center mb-4">{error}</StyledText>}
 
+        {/* Submit Button */}
         <StyledTouchableOpacity onPress={handleSubmit} className="bg-blue-500 p-3 rounded">
           <StyledText className="text-white text-center">Register</StyledText>
         </StyledTouchableOpacity>

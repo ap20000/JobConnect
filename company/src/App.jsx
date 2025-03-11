@@ -8,12 +8,13 @@ import JobDetails from "../src/pages/JobDetails";
 import CreateJob from "../src/pages/CreateJob";
 import EmployerDashboard from "../src/pages/EmployerDashboard";
 import JobApplicants from "../src/pages/JobApplicants";
+import ApplicantsList from "../src/pages/ApplicantsList";
 
 import axios from "axios";
 import ManagerDashboard from "../src/pages/ManagerDashboard";
 
-axios.defaults.baseURL = "http://localhost:3001";
-// axios.defaults.baseURL = "http://100.64.218.51:3002";
+// axios.defaults.baseURL = "http://localhost:3001";
+axios.defaults.baseURL = "http://192.168.1.122:3001";
 axios.defaults.withCredentials = true;
 
 function App() {
@@ -32,7 +33,9 @@ function App() {
         <Route path="/create-job" element={<CreateJob />} />
         <Route path="/employer-dashboard" element={<EmployerDashboard />} />
         <Route path="/manager-dashboard" element={<ManagerDashboard />} />
-        <Route path="/job/:jobId/applicants" element={<JobApplicants />} />
+        <Route path="/aaplicants" element={<JobApplicants />} />
+        <Route path="/jobs/:jobId/applicants" element={<ApplicantsList />} />
+       
 
         {/* Fallback Route */}
         <Route path="*" element={<h1>404 - Page Not Found</h1>} />

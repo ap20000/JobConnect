@@ -86,36 +86,47 @@ export const registerHR = async (req, res) => {
 
 
 // Create a Job (Only for Employers)
+import mongoose from 'mongoose';
+// import Job from '../models/Job'; // Assuming the path to the Job model
+
+// import mongoose from 'mongoose';
+// import Job from '../models/Job'; // Assuming the path to the Job model
+// import User from '../models/User'; // Assuming the path to the User model
+
+// import mongoose from 'mongoose';
+
 export const createJob = async (req, res) => {
   try {
     console.log("User from token:", req.user); // Debugging
+    
+    const { title, description, location, salary, employmentType, skills } = req.body;
+    const employerId = req.user.userId; 
 
-    const { title, description, company, location, salary, employmentType, skills } = req.body;
-    const employerId = req.user.id; 
-// Ensure user ID exists
-
+    // Ensure employerId exists
     if (!employerId) {
       return res.status(403).json({ message: "Unauthorized: Employer ID missing." });
     }
 
-    if (!title || !description || !company || !location || !salary || !employmentType || !skills) {
+    // Check if all required fields are present
+    if (!title || !description || !location || !salary || !employmentType || !skills) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Create the job
     const newJob = new Job({
       title,
       description,
-      company,
       location,
       salary,
       employmentType,
       skills,
-      postedBy: employerId, // Store employer ID
+      postedBy: employerId, // Store employer ID directly
     });
 
+    // Save the job to the database
     await newJob.save();
-    res.status(201).json({ message: "Job created successfully!", job: newJob });
 
+    res.status(201).json({ message: "Job created successfully!", job: newJob });
   } catch (error) {
     console.error("Error creating job:", error);
     res.status(500).json({ message: "Server error. Please try again later." });
@@ -146,11 +157,11 @@ export const getAllJobs = async (req, res) => {
   try {
     console.log("Decoded user from token:", req.user); // Debugging
 
-    if (!req.user || !req.user._id) {
+    if (!req.user || !req.user.userId) {
       return res.status(400).json({ message: "Employer ID is required." });
     }
 
-    const employerId = req.user._id; // Ensure correct ID usage
+    const employerId = req.user.userId; // Use userId instead of _id
     const jobs = await Job.find({ postedBy: employerId });
 
     if (!jobs.length) {
@@ -198,13 +209,63 @@ export const deleteJob = async (req, res) => {
 };
 
 // Get applicants for a job
+// Controller for fetching job applicants
 export const getJobApplicants = async (req, res) => {
   try {
     const jobId = req.params.jobId;
-    const applicants = await Application.find({ jobId }).populate("userId", "name location education email experience cv");
+    
+    // Check if jobId is provided in the request parameters
+    if (!jobId) {
+      return res.status(400).json({ message: "Job ID is required" });
+    }
+
+    // Find applicants for the given jobId
+    const applicants = await Application.find({ jobId })
+      .populate("userId", "name location education email experience cv");
+
+     applicants.forEach((applicant) => {
+      if (applicant.userId.cv && !applicant.userId.cv.startsWith("uploadsCV")) {
+        applicant.userId.cv = `/${applicant.userId.cv}`;
+      }
+    });
+    // If no applicants found for the job, return an appropriate message
+    if (!applicants || applicants.length === 0) {
+      return res.status(404).json({ message: "No applicants found for this job" });
+    }
+
+    // Return the list of applicants for the job
     res.status(200).json(applicants);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    // Handle server errors
+    console.error("Error fetching applicants:", error.message);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
+
+// import Job from "../models/Job.js";
+// import Application from "../models/Application.js";
+
+export const getApplicantsForEmployer = async (req, res) => {
+  try {
+    const employerId = req.user.userId; // Employer's ID (company that posted jobs)
+
+    // Find all jobs posted by this employer
+    const jobs = await Job.find({ company: employerId }).select("_id");
+
+    if (!jobs.length) {
+      return res.status(404).json({ message: "No jobs found for this employer" });
+    }
+
+    // Extract job IDs
+    const jobIds = jobs.map(job => job._id);
+
+    // Find applications for these jobs
+    const applicants = await Application.find({ jobId: { $in: jobIds } })
+      .populate("userId", "name location education email experience cv");
+
+    res.status(200).json(applicants);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

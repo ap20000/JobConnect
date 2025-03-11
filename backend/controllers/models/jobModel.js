@@ -12,7 +12,7 @@ const jobSchema = new mongoose.Schema({
   company: {
     type: mongoose.Schema.Types.ObjectId, // Updated to ObjectId for referencing the User model (or a Company model)
     ref: 'User', // Reference to the User model (if companies are users)
-    required: true,
+    
   },
   location: {
     type: String,
@@ -46,8 +46,7 @@ const jobSchema = new mongoose.Schema({
         ref: "User", // Fixed the extra space here
         required: true 
       },
-      resume: { type: String, required: true },
-      coverLetter: { type: String, required: true },
+     
       appliedAt: { type: Date, default: Date.now },
     },
   ],

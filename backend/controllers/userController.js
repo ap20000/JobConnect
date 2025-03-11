@@ -4,6 +4,8 @@ import User from "./models/userModel.js";
 import jwt from "jsonwebtoken";
 import Application from "./models/Application.js";
 import Job from "./models/jobModel.js";
+import mongoose from "mongoose";
+
 
 export const registerUser = async (req, res) => {
   const { 
@@ -94,9 +96,9 @@ export const loginUser = async (req, res) => {
       return res.status(403).json({ message: "Admins and companies cannot log in from mobile." });
     }
 
-    if (user.role === "user" && platform === "web") {
-      return res.status(403).json({ message: "Users cannot log in from the web." });
-    }
+    // if (user.role === "user" && platform === "web") {
+    //   return res.status(403).json({ message: "Users cannot log in from the web." });
+    // }
 
     // Generate a JWT token
     const token = jwt.sign(
@@ -123,9 +125,14 @@ export const loginUser = async (req, res) => {
 export const completeProfile = async (req, res) => {
   const { userId } = req.params;
   const { name, skills, education, experience, location } = req.body;
-  const image = req.file ? req.file.filename : null;
+  const image = req.files && req.files.image ? req.files.image[0].filename : null;
+  const cv = req.files && req.files.cv ? req.files.cv[0].path : null;
 
   try {
+    if (!cv) {
+      return res.status(400).json({ error: "CV is required" });
+    }
+
     const user = await UserAuth.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -133,10 +140,11 @@ export const completeProfile = async (req, res) => {
 
     user.name = name || user.name;
     user.skills = skills || user.skills;
-    user.education = education || user.education;
-    user.experience = experience || user.experience;
+      user.education = education ? JSON.parse(education) : user.education; // Parse education array
+    user.experience = experience ? JSON.parse(experience) : user.experience; 
     user.location = location || user.location;
     if (image) user.image = image;
+    if (cv) user.cv = cv;
 
     await user.save();
 
@@ -206,65 +214,160 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+export const getUser = async (req, res) => {
+   try {
+    const { email } = req.query;  // Get email from query
 
-// import Job from "../models/Job.js";
-// import User from "../models/User.js";
-
-// import Job from "../models/Job.js";
-// import User from "../models/User.js";
-
-export const applyForJob = async (req, res) => {
-  try {
-    console.log("Decoded user from token:", req.user); // Debugging line
-
-    const { jobId } = req.body;
-    if (!req.user || !req.user.id) {
-      return res.status(401).json({ message: "Unauthorized. Please log in." });
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
     }
 
-    const userId = req.user.id;
+    const user = await UserAuth.findOne({ email }).select("-password");  // Find user by email
 
-    // Check if jobId and CV are provided
-    if (!req.file) return res.status(400).json({ message: "CV is required." });
-    if (!jobId) return res.status(400).json({ message: "Job ID is required." });
-
-    // Find the job
-    const job = await Job.findById(jobId);
-    if (!job) return res.status(404).json({ message: "Job not found." });
-
-    // Check if user already applied
-    if (job.applicants.some(app => app.userId.toString() === userId)) {
-      return res.status(400).json({ message: "You have already applied for this job." });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Find the user
-    const user = await User.findById(userId).select("name location education email experience");
-    if (!user) return res.status(404).json({ message: "User not found in the database." });
+    const userDetails = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      userName: user.userName,
+      role: user.role,
+      category: user.category,
+      image: user.image || "default-profile.png",
+      location: user.location || "Not available",
+      createdAt: user.createdAt,
+      isVerified: user.isVerified,
+      cv: user.cv || null,
+    };
 
-    // Save CV and update job
-    const cvUrl = `/uploadsCV/${req.file.filename}`;
-    job.applicants.push({ userId, cv: cvUrl, appliedAt: new Date() });
-    await job.save();
+    if (user.category === "job_seeker") {
+      userDetails.education = user.education;
+      userDetails.skills = user.skills;
+      userDetails.experience = user.experience;
+      
+    } else if (user.category === "company") {
+      userDetails.companyName = user.companyName;
+    }
 
-    res.status(200).json({ message: "Application submitted successfully!" });
-
+    res.status(200).json(userDetails);  // Send back the user details
   } catch (error) {
-    console.error("Error applying for job:", error);
-    res.status(500).json({ message: "Server error." });
+    console.error("Error fetching user details:", error);
+    res.status(500).json({ message: "Error fetching user details", error: error.message });
   }
 };
 
+// import Job from "../models/Job.js";
+// import User from "../models/User.js";
+
+// import Job from "../models/Job.js";
+// import User from "../models/User.js";
+
+// import mongoose from "mongoose";
+// import Job from "../models/Job.js";  // Adjust path as needed
+// import User from "../models/User.js"; // Ensure correct import
+
+// import mongoose from "mongoose";
+// import Job from "../models/jobModel.js";  // Ensure the correct path to your Job model
+// import Application from "../models/applicationModel.js"; // Ensure correct path to Application model
+// import User from "../models/userModel.js"; // Ensure correct path to User model
+
+// const User = require('../models/User');
+// const Job = require('../models/Job');
+// const Application = require('../models/Application');
+
+export const applyForJob = async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    const userId = req.user.userId; // Extract user ID from token
+
+    console.log("Extracted userId from token:", userId);
+
+    if (!jobId) {
+      return res.status(400).json({ message: "Job ID is required." });
+    }
+
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Use CV stored in the user's profile instead of asking for a new upload
+    if (!user.cv) {
+      return res.status(400).json({ message: "You must upload a CV in your profile before applying." });
+    }
+
+    const existingApplication = await Application.findOne({ jobId, userId });
+    if (existingApplication) {
+      return res.status(400).json({ message: "You have already applied for this job." });
+    }
+
+    const newApplication = new Application({
+      userId: user._id,
+      jobId,
+      name: user.name,
+      email: user.email,
+      location: user.location || "Not Provided",
+      education: user.education.length ? user.education[0].degree : "Not Provided",
+      experience: user.experience.length ? user.experience[0].role : "Not Provided",
+      cv: user.cv, // Use stored CV path
+    });
+
+    await newApplication.save();
+
+    await Job.findByIdAndUpdate(jobId, {
+      $push: { 
+        applicants: { 
+          userId: user._id, 
+          appliedAt: new Date() 
+        }
+      }, 
+    });
+
+    res.status(201).json({ message: "Job application successful!", application: newApplication });
+  } catch (error) {
+    console.error("Error applying for job:", error);
+    res.status(500).json({ message: "Server error. Try again later." });
+  }
+};
+
+export const checkApplicationStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const userId = req.user.userId; // Extract user ID from token
+
+    const application = await Application.findOne({ jobId, userId });
+
+    res.json({ applied: !!application }); // Returns true if applied, false otherwise
+  } catch (error) {
+    console.error("Error checking application status:", error);
+    res.status(500).json({ message: "Server error. Try again later." });
+  }
+};
+
+
+// module.exports = { applyForJob };
 
  // Import Job model
 
 // Controller to fetch all jobs
 export const AllJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().populate("company").populate("postedBy"); // Populate related data
+    const { search } = req.query;
 
-    if (!jobs.length) {
-      return res.status(404).json({ message: "No jobs found." });
+    let query = {}; // Default: Fetch all jobs
+
+    if (search && search.trim() !== "") {
+      query.title = { $regex: `^${search}`, $options: "i" }; // Matches titles starting with search term
     }
+
+    const jobs = await Job.find(query).populate("company").populate("postedBy");
 
     res.status(200).json(jobs);
   } catch (error) {
@@ -272,6 +375,52 @@ export const AllJobs = async (req, res) => {
     res.status(500).json({ message: "Server error. Please try again later." });
   }
 };
+
+// const User = require("../models/User");
+// const Job = require("../models/Job");
+
+// Save Job to User's List
+export const saveJob = async (req, res) => {
+  try {
+    const userId = req.user.userId; // Extract user ID from token
+    const { jobId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.savedJobs.includes(jobId)) {
+      return res.status(400).json({ message: "Job already saved" });
+    }
+
+    user.savedJobs.push(jobId);
+    await user.save();
+
+    res.status(200).json({ message: "Job saved successfully", savedJobs: user.savedJobs });
+  } catch (error) {
+    console.error("Error saving job:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Fetch Saved Jobs
+export const getSavedJobs = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId).populate("savedJobs");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user.savedJobs);
+  } catch (error) {
+    console.error("Error fetching saved jobs:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
 
 // Get all jobs a user has applied for
@@ -282,5 +431,34 @@ export const getUserAppliedJobs = async (req, res) => {
     res.status(200).json(applications);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Search jobs by company name and job title
+export const searchJobs = async (req, res) => {
+  try {
+    const { search } = req.query; // Get the search query parameter
+
+    // Build the search query
+    let searchQuery = {};
+
+    if (search && search.trim() !== "") {
+      // If search query exists, search by job title only
+      searchQuery['title'] = { $regex: search, $options: 'i' };
+    }
+
+    // Find jobs based on the search query
+    const jobs = await Job.find(searchQuery)
+      .populate('company')  // Populate company details (optional, can be removed if not needed)
+      .populate('postedBy'); // Populate user (employer) who posted the job
+
+    if (!jobs.length) {
+      return res.status(404).json({ message: "No jobs found matching the title." });
+    }
+
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error("Error searching for jobs:", error);
+    res.status(500).json({ message: "Server error. Please try again later." });
   }
 };

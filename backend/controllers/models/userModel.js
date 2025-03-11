@@ -19,6 +19,7 @@ category: {
   type: String, enum: ["job_seeker", "company"]
    // Default to 'job_seeker' if not provided
 },
+cv: { type: String, default: "" },
 
 companyRole: {
   type: String,
@@ -30,9 +31,9 @@ companyRole: {
 
 education: [
   {
-    school: { type: String },
-    degree: { type: String },
-    years: { type: String }
+    school:  String ,
+    degree:  String ,
+    years:  String 
   }
 ],
 skills: { 
@@ -41,12 +42,12 @@ skills: {
 },
 experience: [
   {
-    role: { type: String },
-    companyName: { type: String },
-    years: { type: String }
+    role: String ,
+    companyName:  String ,
+    years:  String 
   }
 ],
-
+  savedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: "Job" }],
 
 companyName: { 
   type: String, 
@@ -61,6 +62,7 @@ companyName: {
   isVerified: { type: Boolean, default: false }, // Can be used for account verification
 
 });
+
 
 // Creating the model from schema
 const user = mongoose.model("User", userModel);
