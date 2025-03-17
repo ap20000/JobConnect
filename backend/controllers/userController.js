@@ -6,6 +6,17 @@ import Application from "./models/Application.js";
 import Job from "./models/jobModel.js";
 import mongoose from "mongoose";
 
+import { fileURLToPath } from 'url';   // Import 'fileURLToPath' function
+import { dirname } from 'path';        // Import 'dirname' function
+import fs from 'fs';
+import path from 'path'; 
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// const path = require('path');
+
 
 export const registerUser = async (req, res) => {
   const { 
@@ -158,61 +169,78 @@ export const completeProfile = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { email, oldpassword, newPassword } = req.body;
+    
+    // Find the user by email
     const user = await UserAuth.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: "Invalid Username" });
+      return res.status(400).json({ message: "Email does not exist" });
     }
 
+    // Check if the old password matches
     const isMatch = await bcrypt.compare(oldpassword, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Old password does not match" });
     }
 
+    // Hash the new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedNewPassword;
+
+    // Save the updated password
     await user.save();
-    res.status(200).json({ message: "Password reset successfull" });
+    
+    res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
-    res.status(400).json({ message: "Failed to reset password" });
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Failed to reset password, try again later" });
   }
 };
 
+
 export const updateProfile = async (req, res) => {
-  // Log the request parameters and body
-  console.log('Request Parameters:', req.params);
-  console.log('Request Body:', req.body);
-
   try {
-    const userId = req.params.id; // Get user ID from request parameters
-    const updateData = req.body;
+    const userId = req.user.userId; // Get user ID from JWT (assuming JWT middleware is used)
+    const { name, email, location } = req.body;
+    const user = await User.findById(userId);
 
-    // Check if userId is valid
-    if (!userId || userId === 'undefined') {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-
-    // Find the user by ID and update with new data
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateData },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
+    if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Success response
-    res.status(200).json({
-      message: 'User updated successfully',
-      updatedUser,
-    });
+    // Update user fields
+    user.name = name || user.name;
+    user.email = email || user.email;
+    user.location = location || user.location;
+
+    // Handle image upload (if any)
+    if (req.file) {
+      // Delete old image from the correct directory if it exists
+      if (user.image) {
+        const imagePath = path.join(__dirname, '..', 'uploads', user.image); // Correct path to 'uploads'
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath); // Deletes the old image
+        } else {
+          console.log("Old image not found: ", imagePath);
+        }
+      }
+
+      user.image = req.file.filename;
+    }
+
+    // Save updated user
+    await user.save();
+
+    return res.status(200).json({ message: 'Profile updated successfully', user: {
+        ...user._doc,
+        image: `http://192.168.1.122:3001/uploads/${user.image}`, // Send full URL
+      }, });
   } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 export const getUser = async (req, res) => {
    try {

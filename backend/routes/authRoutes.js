@@ -7,9 +7,12 @@ import {
 } from "../controllers/authController.js";
 
 import {
-  registerUser, loginUser, resetPassword, updateProfile, applyForJob, getUserAppliedJobs, AllJobs, completeProfile, checkApplicationStatus,searchJobs, saveJob, getSavedJobs,getUser
+  registerUser, loginUser, resetPassword, updateProfile, getUserAppliedJobs, AllJobs, completeProfile, checkApplicationStatus,searchJobs, saveJob, getSavedJobs,getUser
 } from "../controllers/userController.js";
-
+import {
+  applyForJob
+  
+} from "../controllers/uspController.js";
 import { 
   registerCompany, registerHR, getCompanyJobs, createJob, getJobById, updateJob, deleteJob, getJobApplicants 
 } from "../controllers/companyController.js";
@@ -39,6 +42,7 @@ router.post("/register",  registerUser);
 router.post("/login", loginUser);
 router.post("/reset", resetPassword);
 router.post("/completeProfile/:userId", upload.fields([{ name: "image", maxCount: 1 }, { name: "cv", maxCount: 1 }]), completeProfile);
+router.put("/updateProfile",authenticateToken, upload.single("image"), updateProfile);
 
 // Job Seeker Routes
 router.get("/users", authenticateToken, getUser);
@@ -68,7 +72,7 @@ router.get("/allJob", getAllJobsWithCompanyAndHR);
 
 // General User Routes
 router.get("/getUser", authenticateToken, getUser);
-router.put("/users/:id", authenticateToken, updateProfile);
+// router.put("/users/:id", authenticateToken, updateProfile);
 router.get("/job", AllJobs);
 // Job Routes
 // router.get('/jobs', getAllJobs);

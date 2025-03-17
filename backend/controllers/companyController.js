@@ -8,6 +8,7 @@ import User from "./models/userModel.js";
 export const registerCompany = async (req, res) => {
   try {
     const { name, userName, email, password, companyName, location } = req.body;
+     const image = req.files && req.files.image ? req.files.image[0].filename : null;
 
     // Check if a manager already exists for this company (optional step to avoid duplicates)
     const existingManager = await User.findOne({ email, companyRole: "manager" });
@@ -24,6 +25,7 @@ export const registerCompany = async (req, res) => {
       companyName,
       companyRole: "manager",
       location,
+      image,
       category: "company",  // Indicating this is a company account
       isVerified: true,
     });
@@ -99,12 +101,24 @@ export const createJob = async (req, res) => {
   try {
     console.log("User from token:", req.user); // Debugging
     
-    const { title, description, location, salary, employmentType, skills } = req.body;
-    const employerId = req.user.userId; 
+    const { title, position, description, location, salary, employmentType, skills } = req.body;
+    const employerId = req.user.userId; // Employer's user ID from token
 
     // Ensure employerId exists
     if (!employerId) {
       return res.status(403).json({ message: "Unauthorized: Employer ID missing." });
+    }
+
+    // Fetch the employer's user document
+    const employer = await User.findById(employerId);
+    if (!employer) {
+      return res.status(404).json({ message: "Employer not found." });
+    }
+
+    // Ensure employer has a company name (assumed the employer is an HR or manager)
+    const companyName = employer.companyName;
+    if (!companyName) {
+      return res.status(400).json({ message: "Employer is not associated with a company." });
     }
 
     // Check if all required fields are present
@@ -112,14 +126,19 @@ export const createJob = async (req, res) => {
       return res.status(400).json({ message: "All fields are required." });
     }
 
+    // Convert skills to an array if it's a comma-separated string
+    let skillsArray = Array.isArray(skills) ? skills : skills.split(',').map(skill => skill.trim());
+
     // Create the job
     const newJob = new Job({
       title,
+      position,
       description,
       location,
       salary,
       employmentType,
-      skills,
+      skills: skillsArray,
+      companyName,  // Add company name here
       postedBy: employerId, // Store employer ID directly
     });
 
@@ -267,5 +286,112 @@ export const getApplicantsForEmployer = async (req, res) => {
     res.status(200).json(applicants);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+// Shortlist an applicant
+
+
+// Get shortlisted applicants for a specific job
+export const getShortlistedApplicants = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Find all applications for the job and filter by "shortlisted" status
+    const applications = await Application.find({ jobId, isShortlisted: "Shortlisted" })
+      .populate("userId", "name location cv");  // Populate the userId field (not applicant)
+
+    if (!applications.length) {
+      return res.status(404).json({ message: "No shortlisted applicants found." });
+    }
+
+    res.status(200).json({ applicants: applications });
+  } catch (error) {
+    console.error("Error fetching shortlisted applicants:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Get notlisted (rejected) applicants for a specific job
+export const getNotlistedApplicants = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Find all applications for the job and filter by "notlisted" status
+    const applications = await Application.find({ jobId, isShortlisted: "Not Shortlisted" })
+      .populate("userId", "name location cv");  // Populate the userId field (not applicant)
+
+    if (!applications.length) {
+      return res.status(404).json({ message: "No notlisted applicants found." });
+    }
+
+    res.status(200).json({ applicants: applications });
+  } catch (error) {
+    console.error("Error fetching notlisted applicants:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+export const shortlistApplicant = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    
+    // Find the application by ID and populate user details
+    const application = await Application.findById(applicationId).populate("applicant", "name location cv");
+    
+    if (!application) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+
+    // Update the status to "shortlisted"
+    application.status = "shortlisted";
+    await application.save();
+
+    res.status(200).json({ 
+      message: "Applicant shortlisted successfully!", 
+      application: {
+        id: application._id,
+        status: application.status,
+        name: application.applicant.name,
+        location: application.applicant.location,
+        cv: application.applicant.cv
+      }
+    });
+  } catch (error) {
+    console.error("Error shortlisting applicant:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+
+// Notlist (reject) an applicant
+export const notlistApplicant = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    
+    // Find the application by ID and populate user details
+    const application = await Application.findById(applicationId).populate("applicant", "name location cv");
+    
+    if (!application) {
+      return res.status(404).json({ message: "Application not found." });
+    }
+
+    // Update the status to "notlisted"
+    application.status = "notlisted";
+    await application.save();
+
+    res.status(200).json({ 
+      message: "Applicant notlisted successfully!", 
+      application: {
+        id: application._id,
+        status: application.status,
+        name: application.applicant.name,
+        location: application.applicant.location,
+        cv: application.applicant.cv
+      }
+    });
+  } catch (error) {
+    console.error("Error notlisting applicant:", error);
+    res.status(500).json({ message: "Server error." });
   }
 };

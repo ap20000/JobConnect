@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // For navigation
 import axios from 'axios';
 
 const ApplicantsList = () => {
   const [applicants, setApplicants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // For navigating to other pages
   const token = localStorage.getItem('authToken');
-  const jobId = window.location.pathname.split('/')[2]; // Extract jobId from the URL
+  const jobId = window.location.pathname.split('/')[2]; // Extract jobId from URL
 
   useEffect(() => {
     const fetchApplicants = async () => {
@@ -41,6 +43,23 @@ const ApplicantsList = () => {
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-4">
       <h2 className="text-xl font-semibold mb-4">Applicants for This Job</h2>
+
+      {/* Navigation Buttons */}
+      <div className="mb-4 flex gap-4">
+        <button
+          className="px-4 py-2 bg-green-500 text-white rounded-md"
+          onClick={() => navigate(`/shortlisted?jobId=${jobId}`)}
+        >
+          View Shortlisted Applicants
+        </button>
+        <button
+          className="px-4 py-2 bg-red-500 text-white rounded-md"
+          onClick={() => navigate(`/notlisted?jobId=${jobId}`)}
+        >
+          View Notlisted Applicants
+        </button>
+      </div>
+
       {applicants.length === 0 ? (
         <p>No applicants yet.</p>
       ) : (

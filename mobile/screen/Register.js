@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { styled } from 'nativewind';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
@@ -27,12 +28,20 @@ const Register = () => {
     const { email, userName, password, confirmPassword } = formData;
 
     if (!email || !userName || !password || !confirmPassword) {
-      setError('All fields are required.');
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: 'All fields are required.',
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: 'Passwords do not match.',
+      });
       return;
     }
 
@@ -40,20 +49,32 @@ const Register = () => {
       const response = await axios.post('/user/register', {
         email,
         userName,
-        password
+        password,
       });
 
       if (response.status === 201) {
-        Alert.alert('Success', 'Registration successful');
-        
+        Toast.show({
+          type: 'success',
+          text1: 'Registration Successful',
+          text2: 'Your account has been created!',
+        });
+
         // Navigate to the complete profile page with the user ID
         navigation.navigate('CompleteProfile', { userId: response.data.user.userId });
       } else {
-        setError(response.data.error || 'An error occurred.');
+        Toast.show({
+          type: 'error',
+          text1: 'Registration Failed',
+          text2: response.data.error || 'An error occurred.',
+        });
       }
     } catch (err) {
       console.error('Axios error:', err.response ? err.response.data : err);
-      setError('Something went wrong.');
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Error',
+        text2: 'Something went wrong. Please try again.',
+      });
     }
   };
 
@@ -96,14 +117,14 @@ const Register = () => {
           onChangeText={(value) => handleChange('confirmPassword', value)}
         />
 
-        {/* Error Message */}
-        {error && <StyledText className="text-red-500 text-center mb-4">{error}</StyledText>}
-
         {/* Submit Button */}
         <StyledTouchableOpacity onPress={handleSubmit} className="bg-blue-500 p-3 rounded">
           <StyledText className="text-white text-center">Register</StyledText>
         </StyledTouchableOpacity>
       </ScrollView>
+
+      {/* Toast Component */}
+      <Toast />
     </StyledView>
   );
 };

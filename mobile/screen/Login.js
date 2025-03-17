@@ -4,8 +4,6 @@ import {
   View, 
   Text, 
   TextInput, 
-  Pressable, 
-  Alert, 
   ActivityIndicator, 
   SafeAreaView, 
   TouchableOpacity 
@@ -14,11 +12,11 @@ import { styled } from "nativewind";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Toast from "react-native-toast-message";
 
 const StyledView = styled(View);
 const StyledText = styled(Text);
 const StyledTextInput = styled(TextInput);
-const StyledPressable = styled(Pressable);
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -31,36 +29,38 @@ const Login = () => {
     try {
       const response = await axios.post("/user/login", { email, password, platform: "mobile" });
 
-      // Extract data safely
       const { token, category } = response.data;
+      
 
-      // Check for valid values
       if (!email || !token || !category) {
         throw new Error("Invalid login response. Missing required data.");
       }
 
-      // Store valid values in AsyncStorage
       await AsyncStorage.setItem("userEmail", email);
       await AsyncStorage.setItem("authToken", token);
       await AsyncStorage.setItem("userCategory", category);
+    
 
-      // await AsyncStorage.setItem("authToken", data.token);
-      Alert.alert("Login successful");
+      Toast.show({
+        type: "success",
+        text1: "Login Successful",
+        text2: "Welcome back!",
+      });
 
-      // Clear the inputs
       setEmail("");
       setPassword("");
 
-      // Navigate to screens based on category
       if (category === "job_seeker") {
-        console.log("Navigating to HomeScreen");
         navigation.navigate("HomeTabs", { email });
       } else {
         throw new Error("Unknown user category.");
       }
     } catch (error) {
-      // Handle errors and provide user feedback
-      Alert.alert("Login failed", error.response?.data?.message || error.message);
+      Toast.show({
+        type: "error",
+        text1: "Login Failed",
+        text2: error.response?.data?.message || error.message,
+      });
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ const Login = () => {
             Login here
           </StyledText>
           <StyledText className="text-lg font-semibold text-center max-w-[60%]">
-            Welcome back you've been missed!
+            Welcome back, you've been missed!
           </StyledText>
         </StyledView>
 
@@ -119,20 +119,16 @@ const Login = () => {
           </StyledText>
           <StyledView className="flex-row justify-center mt-4 space-x-4">
             {["google", "apple", "facebook"].map((platform) => (
-              <TouchableOpacity
-                key={platform}
-                className="p-3 bg-gray rounded-md"
-              >
-                <Ionicons
-                  name={`logo-${platform}`}
-                  color="#6b7280"
-                  size={24}
-                />
+              <TouchableOpacity key={platform} className="p-3 bg-gray rounded-md">
+                <Ionicons name={`logo-${platform}`} color="#6b7280" size={24} />
               </TouchableOpacity>
             ))}
           </StyledView>
         </StyledView>
       </StyledView>
+
+      {/* Toast Message Component */}
+      <Toast />
     </SafeAreaView>
   );
 };

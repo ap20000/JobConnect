@@ -16,6 +16,7 @@ import session from 'express-session';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+export const BASE_URL = "http://192.168.1.122:3001";
 
 const app = express();
 
@@ -42,6 +43,8 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 
 app.use(express.static(path.join(__dirname, "/uploads")));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // app.use(express.static(path.join(__dirname, "/Cvupload")));
 // app.use("/Cvupload", express.static("uploadsCV"));
 const uploadsPath = path.join(__dirname, 'uploadsCV');

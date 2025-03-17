@@ -11,8 +11,10 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import { BASE_URL } from "../App.js";
+import { useNavigation } from "@react-navigation/native";
 
-const Profile = () => {
+const Profile = ({ navigation, route }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [savedJobs, setSavedJobs] = useState([]);
@@ -22,14 +24,12 @@ const Profile = () => {
     const fetchUserProfile = async () => {
       try {
         const token = await AsyncStorage.getItem("authToken");
-
         if (!token) {
           Alert.alert("Error", "No token found, please log in again.");
           return;
         }
 
         const userEmail = await AsyncStorage.getItem("userEmail");
-
         if (!userEmail) {
           Alert.alert("Error", "No email found, please log in again.");
           return;
@@ -45,7 +45,7 @@ const Profile = () => {
         const formattedUser = {
           ...response.data,
           cv: response.data.cv
-            ? `http://192.168.1.122:3001/${response.data.cv.replace("\\", "/")}`
+            ? `${BASE_URL}/${response.data.cv.replace("\\", "/")}`
             : null,
         };
 
@@ -60,6 +60,13 @@ const Profile = () => {
 
     fetchUserProfile();
   }, []);
+
+  // Listen for updates from the UpdateProfile screen and update the user state
+  useEffect(() => {
+    if (route.params?.updatedUser) {
+      setUser(route.params.updatedUser); // Update user data if passed
+    }
+  }, [route.params?.updatedUser]);
 
   const fetchSavedJobs = async () => {
     try {
@@ -95,6 +102,11 @@ const Profile = () => {
     }
   };
 
+  // Handle profile update navigation
+  const handleUpdateProfile = () => {
+    navigation.navigate("UpdateProfile", { user, setUser });
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
@@ -107,7 +119,7 @@ const Profile = () => {
     <ScrollView style={{ padding: 20 }}>
       <View style={{ alignItems: "center" }}>
         <Image
-          source={{ uri: `http://192.168.1.122:3001/${user.image}` }}
+          source={{ uri: `${BASE_URL}/${user.image}` }}
           style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 10 }}
         />
         <Text>Name: {user.name}</Text>
@@ -145,6 +157,19 @@ const Profile = () => {
             <Text style={{ color: "#fff", textAlign: "center" }}>View CV</Text>
           </TouchableOpacity>
         )}
+
+        {/* Button to update profile */}
+        <TouchableOpacity
+          onPress={handleUpdateProfile}
+          style={{
+            marginTop: 15,
+            backgroundColor: "#f0ad4e",
+            padding: 10,
+            borderRadius: 5,
+          }}
+        >
+          <Text style={{ color: "#fff", textAlign: "center" }}>Update Profile</Text>
+        </TouchableOpacity>
 
         {/* Show saved jobs if button is clicked */}
         {showSavedJobs && (

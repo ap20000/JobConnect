@@ -9,6 +9,8 @@ import CreateJob from "../src/pages/CreateJob";
 import EmployerDashboard from "../src/pages/EmployerDashboard";
 import JobApplicants from "../src/pages/JobApplicants";
 import ApplicantsList from "../src/pages/ApplicantsList";
+import ShortlistedApplicants from "../src/pages/ShortlistedApplicants";
+import NotlistedApplicants from "../src/pages/NotlistedApplicants";
 
 import axios from "axios";
 import ManagerDashboard from "../src/pages/ManagerDashboard";
@@ -35,6 +37,9 @@ function App() {
         <Route path="/manager-dashboard" element={<ManagerDashboard />} />
         <Route path="/aaplicants" element={<JobApplicants />} />
         <Route path="/jobs/:jobId/applicants" element={<ApplicantsList />} />
+        <Route path="/shortlisted" element={<ShortlistedApplicants />} />
+        <Route path="/notlisted" element={<NotlistedApplicants />} />
+
        
 
         {/* Fallback Route */}

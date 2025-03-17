@@ -5,6 +5,10 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  position: {  // New position field
+    type: String,
+    required: true,
+  },
   description: {
     type: String,
     required: true,
@@ -18,6 +22,7 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  
   salary: {
     type: Number,
     required: true,

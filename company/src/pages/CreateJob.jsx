@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 const CreateJob = ({ employerId }) => {
   const [jobData, setJobData] = useState({
     title: "",
+    position: "", // Add position field
     description: "",
     location: "",
     salary: "",
@@ -53,6 +54,7 @@ const CreateJob = ({ employerId }) => {
         setMessage("Job posted successfully!");
         setJobData({
           title: "",
+          position: "",
           description: "",
           location: "",
           salary: "",
@@ -78,6 +80,14 @@ const CreateJob = ({ employerId }) => {
           placeholder="Job Title"
           onChange={handleChange}
           value={jobData.title}
+          required
+        />
+         <input
+          type="text"
+          name="Position"
+          placeholder="Position"
+          onChange={handleChange}
+          value={jobData.position}
           required
         />
         <textarea

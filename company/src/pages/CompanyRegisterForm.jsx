@@ -13,6 +13,7 @@ const CompanyRegisterForm = () => {
     location: "",
   });
 
+  const [image, setImage] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const navigate = useNavigate();
@@ -21,19 +22,39 @@ const CompanyRegisterForm = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    setImage(e.target.files[0]); // Store the selected image
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("userName", formData.userName);
+    formDataToSend.append("email", formData.email);
+    formDataToSend.append("password", formData.password);
+    formDataToSend.append("companyName", formData.companyName);
+    formDataToSend.append("location", formData.location);
+    formDataToSend.append("category", "company");
+    
+    if (image) {
+      formDataToSend.append("image", image); // Append the image file
+    }
+
     try {
-      // Make the POST request with credentials enabled
-      const response = await axios.post("http://localhost:3001/company/registerCompany", {
-        ...formData,
-        category: "company",  // Ensure the category is company
-      }, {
-        withCredentials: true,  // Ensure credentials are sent
-      });
+      const response = await axios.post(
+        "http://localhost:3001/company/registerCompany", 
+        formDataToSend, 
+        {
+          withCredentials: true,  // Ensure credentials are sent
+          headers: {
+            "Content-Type": "multipart/form-data", // Set the content type to multipart/form-data
+          },
+        }
+      );
 
       console.log("🔍 Backend Response:", response.data); // ✅ Log response
 
@@ -95,6 +116,12 @@ const CompanyRegisterForm = () => {
           placeholder="Location"
           onChange={handleChange}
           required
+        />
+        <input
+          type="file"
+          name="image"
+          accept="image/*"
+          onChange={handleFileChange}
         />
         <button type="submit">Register</button>
       </form>
