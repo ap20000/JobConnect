@@ -1,133 +1,95 @@
-import React, { useState } from "react";
-import axios from "axios";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  ActivityIndicator, 
-  SafeAreaView, 
-  TouchableOpacity 
-} from "react-native";
-import { styled } from "nativewind";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import Toast from "react-native-toast-message";
-
-const StyledView = styled(View);
-const StyledText = styled(Text);
-const StyledTextInput = styled(TextInput);
+import React, { useState } from 'react';
+import axios from 'axios';
+import { View, Text, TextInput, ActivityIndicator, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from 'react-native-toast-message';
+import { Eye, Facebook, Instagram, Phone } from 'lucide-react-native';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
   const loginUser = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("/user/login", { email, password, platform: "mobile" });
-
-      const { token, category } = response.data;
+      const response = await axios.post('/user/login', { email, password, platform: 'mobile' });
+      console.log("Login Response:", response.data); 
+      const { token, category   } = response.data;
       
-
-      if (!email || !token || !category) {
-        throw new Error("Invalid login response. Missing required data.");
-      }
-
-      await AsyncStorage.setItem("userEmail", email);
-      await AsyncStorage.setItem("authToken", token);
-      await AsyncStorage.setItem("userCategory", category);
-    
-
-      Toast.show({
-        type: "success",
-        text1: "Login Successful",
-        text2: "Welcome back!",
-      });
-
-      setEmail("");
-      setPassword("");
-
-      if (category === "job_seeker") {
-        navigation.navigate("HomeTabs", { email });
-      } else {
-        throw new Error("Unknown user category.");
-      }
+      if (!email || !token || !category ) throw new Error('Invalid login response. Missing required data.');
+      await AsyncStorage.setItem('userEmail', email);
+      await AsyncStorage.setItem('authToken', token);
+      await AsyncStorage.setItem('userCategory', category);
+      
+      setEmail('');
+      setPassword('');
+      Toast.show({ type: 'success', position: 'top', text1: 'Login Successful' });
+      setTimeout(() => navigation.navigate('HomeTabs', { email }), 1000);
     } catch (error) {
-      Toast.show({
-        type: "error",
-        text1: "Login Failed",
-        text2: error.response?.data?.message || error.message,
-      });
+      Toast.show({ type: 'error', position: 'top', text1: error.response?.data?.message || error.message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <StyledView className="p-6">
-        <StyledView className="items-center">
-          <StyledText className="text-3xl text-primary font-bold my-6">
-            Login here
-          </StyledText>
-          <StyledText className="text-lg font-semibold text-center max-w-[60%]">
-            Welcome back, you've been missed!
-          </StyledText>
-        </StyledView>
+    <SafeAreaView className="flex-1 bg-[#232639]">
+      <View className="p-6 bg-white rounded-t-3xl flex-1 justify-between">
+        {/* Logo on top */}
+        <View className="items-center my-1">
+          <Image source={require('./assets/handshake.png')} className="w-96 h-72" />
+        </View>
 
-        <StyledView className="my-6 space-y-4">
-          <StyledTextInput
-            className="border border-black-300 p-4 rounded-md"
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <StyledTextInput
-            className="border border-black-300 p-4 rounded-md"
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
-        </StyledView>
+        <View >
+          <View className="mt-12 items-center my-6">
+            <Text className="text-xl font-bold mt-0">Welcome back</Text>
+          </View>
 
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" className="my-6" />
-        ) : (
-          <TouchableOpacity
-            className="bg-primary py-4 my-6 rounded-md shadow-lg"
-            onPress={loginUser}
-          >
-            <Text className="text-lg font-bold text-onPrimary text-center">
-              Sign in
+          <View className="my-1 space-y-4">
+            <TextInput className="border border-gray-300 p-4 rounded-md" placeholder="Email" value={email} onChangeText={setEmail} />
+            <View className="border border-gray-300 p-4 rounded-md flex-row justify-between items-center">
+              <TextInput className="flex-1" placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+              <Eye size={20} color="gray" />
+            </View>
+          </View>
+
+          {loading ? (
+            <ActivityIndicator size="large" color="#232639" className="my-6" />
+          ) : (
+            <TouchableOpacity className="bg-[#232639] py-4 my-6 rounded-md" onPress={loginUser}>
+              <Text className="text-lg font-bold text-white text-center">Continue</Text>
+            </TouchableOpacity>
+          )}
+
+          <View className="flex-row items-center my-4">
+            <View className="flex-1 h-px bg-gray-300" />
+            <Text className="mx-4 text-gray-600">or</Text>
+            <View className="flex-1 h-px bg-gray-300" />
+          </View>
+
+          <View className="flex-row justify-center space-x-6 my-4">
+            <TouchableOpacity className="p-3 border border-gray-400 rounded-md">
+              <Facebook size={24} color="#232639" />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-3 border border-gray-400 rounded-md">
+              <Instagram size={24} color="#232639" />
+            </TouchableOpacity>
+            <TouchableOpacity className="p-3 border border-gray-400 rounded-md">
+              <Phone size={24} color="#232639" />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity onPress={() => navigation.navigate('Register')} className="mt-6">
+            <Text className="text-center text-gray-700">
+              Don’t have an account? <Text className="text-[#232639] font-bold">Sign up</Text>
             </Text>
           </TouchableOpacity>
-        )}
+        </View>
+      </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <StyledText className="text-sm font-semibold text-center text-text">
-            Create new account
-          </StyledText>
-        </TouchableOpacity>
-
-        <StyledView className="my-6">
-          <StyledText className="text-sm font-semibold text-center text-primary">
-            Or continue with
-          </StyledText>
-          <StyledView className="flex-row justify-center mt-4 space-x-4">
-            {["google", "apple", "facebook"].map((platform) => (
-              <TouchableOpacity key={platform} className="p-3 bg-gray rounded-md">
-                <Ionicons name={`logo-${platform}`} color="#6b7280" size={24} />
-              </TouchableOpacity>
-            ))}
-          </StyledView>
-        </StyledView>
-      </StyledView>
-
-      {/* Toast Message Component */}
       <Toast />
     </SafeAreaView>
   );

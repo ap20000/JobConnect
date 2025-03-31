@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { BASE_URL } from "../App.js"; // Adjust this path to your base URL
 
 const UpdateProfile = ({ route }) => {
@@ -20,6 +21,7 @@ const UpdateProfile = ({ route }) => {
   const [email, setEmail] = useState(user.email || "");
   const [location, setLocation] = useState(user.location || "");
   const [image, setImage] = useState(user.image || "");
+  const [cv, setCv] = useState(user.cv || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigation = useNavigation();
@@ -31,7 +33,18 @@ const UpdateProfile = ({ route }) => {
     }
   }, [user]);
 
+  // Request permissions for image picker
+  const requestImagePickerPermissions = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "You need to grant permission to access the media library.");
+    }
+  };
+
   const handleImagePick = async () => {
+    // Request permissions if not already granted
+    await requestImagePickerPermissions();
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
@@ -41,13 +54,38 @@ const UpdateProfile = ({ route }) => {
 
     console.log("Image Picker Result:", result);
 
-    // Check if the result is valid and has the image URI
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const selectedImageUri = result.assets[0].uri;
       setImage(selectedImageUri);
       console.log("Selected image URI:", selectedImageUri); // Log to check if URI is set
+    } else {
+      Alert.alert("Error", "No image selected or selection canceled.");
     }
   };
+
+  // Updated CV pick function with debugging
+  const handleCvPick = async () => {
+  try {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: "application/pdf", // You can add other types like DOCX if needed
+    });
+
+    console.log("CV Pick Result:", result);  // Log the result to check the structure
+
+    // Check if document selection was not canceled
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedCvUri = result.assets[0].uri;
+      console.log("CV picked:", selectedCvUri); // Debugging log
+      setCv(selectedCvUri); // Set the selected CV URI to state
+    } else {
+      Alert.alert("Error", "No CV selected or selection canceled.");
+    }
+  } catch (error) {
+    console.error("Error picking CV:", error);
+    Alert.alert("Error", "Failed to pick CV.");
+  }
+};
+
 
   const handleUpdateProfile = async () => {
     setLoading(true);
@@ -65,6 +103,14 @@ const UpdateProfile = ({ route }) => {
           uri: image,
           type: "image/jpeg", // Adjust the mime type if needed
           name: imageName,
+        });
+      }
+      if (cv) {
+        const cvName = cv.split("/").pop();
+        formData.append("cv", {
+          uri: cv,
+          type: "application/pdf", // Adjust mime type if needed (e.g., for DOCX)
+          name: cvName,
         });
       }
       formData.append("name", name);
@@ -86,7 +132,9 @@ const UpdateProfile = ({ route }) => {
         Alert.alert("Success", "Profile updated successfully!");
 
         // Update the local image state with the new image URL from the server
-        setImage(`http://192.168.1.122:3001${response.data.user.image}`);
+        setImage(`${response.data.user.image}`);
+        console.log("Updated Image URL:", response.data.user.image);
+        setCv(`${response.data.user.cv}`);
 
         // Navigate to Profile screen with updated user data
         navigation.navigate("HomeTabs", {
@@ -116,7 +164,11 @@ const UpdateProfile = ({ route }) => {
 
       <TouchableOpacity onPress={handleImagePick} style={{ alignItems: "center" }}>
         <Image
-          source={{ uri: image ? image : `${BASE_URL}/uploads/${user.image}` }}
+          source={{
+            uri: image
+              ? image
+              : `${BASE_URL}/uploads/${user.image}?${new Date().getTime()}`,
+          }}
           style={{
             width: 100,
             height: 100,
@@ -165,6 +217,16 @@ const UpdateProfile = ({ route }) => {
         onChangeText={setLocation}
       />
 
+      <TouchableOpacity onPress={handleCvPick} style={{ marginBottom: 20 }}>
+        <Text>Pick a CV (PDF only)</Text>
+      </TouchableOpacity>
+
+      {cv ? (
+        <Text>CV: {cv.split("/").pop()}</Text> // Display CV file name
+      ) : (
+        <Text>No CV selected</Text>
+      )}
+      
       <TouchableOpacity
         onPress={handleUpdateProfile}
         style={{

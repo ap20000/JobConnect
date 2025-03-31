@@ -34,10 +34,25 @@ const extractSkillsFromCV = async (cvPath) => {
 
     // Predefined list of technical skills to match (can be expanded)
     const predefinedSkills = [
-      'mobile', 'application', 'development', 'ecommerce', 'solutions', 'frontend',
-      'backend', 'database', 'management', 'iot', 'project', 'skills', 'android', 'java',
-      'php', 'flutter', 'xml', 'vs', 'studio', 'html', 'css', 'javascript', 'react', 'node'
+        // IT Skills
+        'mobile', 'application', 'development', 'ecommerce', 'solutions', 'frontend',
+        'backend', 'database', 'management', 'iot', 'project', 'skills', 'android', 'java',
+        'php', 'flutter', 'xml', 'vs', 'studio', 'html', 'css', 'javascript', 'react', 'node',
+        'python', 'swift', 'c++', 'ruby', 'typescript', 'angular', 'vue', 'sql', 'nosql', 'git',
+        'cloud', 'aws', 'azure', 'docker', 'kubernetes', 'devops', 'automation', 'linux', 'bash',
+        'networking', 'ai', 'machine learning', 'deep learning', 'data analysis', 'data science', 'cybersecurity', 'penetration testing',
+        'blockchain', 'flutter', 'firebase', 'graphql', 'api', 'json', 'web', 'app', 'ux', 'ui', 'gitlab',
+        
+        // Business/Marketing Skills
+        'communication', 'teamwork', 'leadership', 'negotiation', 'problem-solving', 'critical thinking',
+        'project management', 'customer service', 'time management', 'sales', 'digital marketing', 'content marketing',
+        'brand management', 'seo', 'sem', 'social media marketing', 'email marketing', 'advertising', 'market research',
+        'copywriting', 'event planning', 'strategy', 'business development', 'public relations', 'customer relationship',
+        'collaboration', 'presentation', 'analytics', 'data-driven', 'decision-making', 'growth hacking', 'budgeting', 
+        'market segmentation', 'product management', 'account management', 'influencer marketing', 'customer acquisition',
+        'affiliate marketing', 'pr', 'trade shows', 'webinars', 'online advertising'
     ];
+
 
     // Filter tokens based on predefined skills
     const filteredSkills = tokens.filter(token => predefinedSkills.includes(token));

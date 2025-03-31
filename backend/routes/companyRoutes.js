@@ -11,9 +11,9 @@ router.post("/registerHr", authenticateToken, isManagerOrCompany, registerHR);
 router.post("/createJob", authenticateToken, isEmployer, createJob);
 
 router.get("/jobs", authenticateToken, getAllJobs);
-router.get("/job/:jobId", getJobById);
-router.put("/job/:jobId",  updateJob);
-router.delete("/job/:jobId", deleteJob);
+router.get("/jobs/:jobId", getJobById);
+router.put("/jobs/:jobId",authenticateToken,  updateJob);
+router.delete("/jobs/:jobId",authenticateToken, deleteJob);
 router.get("/jobs/:jobId/applicants", authenticateToken, getJobApplicants);
 router.get("/shortlist/:applicationId", authenticateToken,  shortlistApplicant);
 router.get("/notlist/:applicationId",authenticateToken, notlistApplicant);

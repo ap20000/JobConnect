@@ -110,17 +110,30 @@ export const loginUser = async (req, res) => {
     // if (user.role === "user" && platform === "web") {
     //   return res.status(403).json({ message: "Users cannot log in from the web." });
     // }
+    if (user.role === "admin") {
+      return res.status(403).json({ message: "Access denied. Only admins can log in." });
+    }
 
     // Generate a JWT token
-    const token = jwt.sign(
+     const accessToken = jwt.sign(
       { userId: user._id, role: user.role, companyRole: user.companyRole || null },
       process.env.JWT_SECRET,
-      { expiresIn: "2d" }
+      { expiresIn: "15m" }  // 15 minutes
     );
+
+    // Generate Refresh Token (Longer-lived)
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: "30d" }  // 30 days
+    );
+
+    // Store refresh token in DB (optional)
+    user.refreshToken = refreshToken;
 
     res.status(200).json({
       message: "Login Successful",
-      token,
+      token: accessToken, 
       role: user.role,
       category: user.category,
       companyRole: user.companyRole || null,
@@ -131,6 +144,31 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Failed to login user", error: error.message });
   }
 };
+export const logoutUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required for logout." });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Clear refresh token in DB
+    user.refreshToken = null;
+    await user.save();
+
+    res.status(200).json({ message: "Logout successful." });
+
+  } catch (error) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ message: "Failed to logout user" });
+  }
+};
+
 
 
 export const completeProfile = async (req, res) => {
@@ -227,20 +265,31 @@ export const updateProfile = async (req, res) => {
 
       user.image = req.file.filename;
     }
+    if (req.files && req.files.cv) {
+      // Delete old CV if it exists
+      if (user.cv) {
+        const cvPath = path.join(__dirname, 'uploadsCV', user.cv);
+        if (fs.existsSync(cvPath)) {
+          fs.unlinkSync(cvPath); // Delete old CV
+        }
+      }
+      user.cv = req.files.cv[0].filename; // Save the new CV filename
+    }
 
     // Save updated user
     await user.save();
 
     return res.status(200).json({ message: 'Profile updated successfully', user: {
         ...user._doc,
-        image: `http://192.168.1.122:3001/uploads/${user.image}`, // Send full URL
+        image: user.image ? `http://192.168.1.122:3001/uploads/${user.image}` : null, // Send full URL
+        cv: user.cv ? `http://localhost:3001/uploadsCV/${user.cv}` : null,
+       
       }, });
   } catch (error) {
     console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 export const getUser = async (req, res) => {
    try {

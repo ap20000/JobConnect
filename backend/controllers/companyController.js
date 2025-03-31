@@ -101,7 +101,7 @@ export const createJob = async (req, res) => {
   try {
     console.log("User from token:", req.user); // Debugging
     
-    const { title, position, description, location, salary, employmentType, skills } = req.body;
+    const { title, position, description, location, salary, employmentType, skills  } = req.body;
     const employerId = req.user.userId; // Employer's user ID from token
 
     // Ensure employerId exists

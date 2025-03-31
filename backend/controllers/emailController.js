@@ -23,15 +23,15 @@ Congratulations! Your application for the position of ${job.title} at ${job.comp
 
 Here are your application details:
 
-- **Full Name:** ${user.name}
-- **Job Title:** ${job.title}
-- **Company:** ${job.companyName}
-- **Applied Position:** ${job.position}
+- Full Name: ${user.name}
+- Job Title: ${job.title}
+- Company: ${job.companyName}
+- Applied Position: ${job.position}
 
 We will review your application and update you soon.
 
 Best regards,  
-Insights Team`,
+JobConnect Team`,
   };
 
   try {

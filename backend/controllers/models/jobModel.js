@@ -13,6 +13,7 @@ const jobSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  companyName: { type: String },
   company: {
     type: mongoose.Schema.Types.ObjectId, // Updated to ObjectId for referencing the User model (or a Company model)
     ref: 'User', // Reference to the User model (if companies are users)

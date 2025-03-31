@@ -7,7 +7,7 @@ import {
 } from "../controllers/authController.js";
 
 import {
-  registerUser, loginUser, resetPassword, updateProfile, getUserAppliedJobs, AllJobs, completeProfile, checkApplicationStatus,searchJobs, saveJob, getSavedJobs,getUser
+  registerUser, loginUser, logoutUser, resetPassword, updateProfile, getUserAppliedJobs, AllJobs, completeProfile, checkApplicationStatus,searchJobs, saveJob, getSavedJobs,getUser
 } from "../controllers/userController.js";
 import {
   applyForJob
@@ -19,7 +19,7 @@ import {
 
 import upload from '../config/multer.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
-import { isManagerOrCompany, isEmployer, isJobSeeker, isAdmin } from '../middleware/roleMiddleware.js';
+import { isManagerOrCompany, isEmployer, isJobSeeker, isAdmin, refreshAccessToken } from '../middleware/roleMiddleware.js';
 
 const router = Router();
 // const storage = multer.memoryStorage(); // Stores files in memory (you can use diskStorage instead)
@@ -40,9 +40,11 @@ const router = Router();
 // Public Routes
 router.post("/register",  registerUser);
 router.post("/login", loginUser);
+router.post("/refresh", refreshAccessToken);
+router.post("/logout", logoutUser);
 router.post("/reset", resetPassword);
 router.post("/completeProfile/:userId", upload.fields([{ name: "image", maxCount: 1 }, { name: "cv", maxCount: 1 }]), completeProfile);
-router.put("/updateProfile",authenticateToken, upload.single("image"), updateProfile);
+router.put("/updateProfile",authenticateToken, upload.fields([{ name: 'image', maxCount: 1 }, { name: 'cv', maxCount: 1 }]), updateProfile);
 
 // Job Seeker Routes
 router.get("/users", authenticateToken, getUser);

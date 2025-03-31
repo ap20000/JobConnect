@@ -17,7 +17,8 @@ import HomeTabs from "./screen/HomeTabs"; // Import Bottom Tab Navigation
 import UpdateProfile from './screen/UpdateProfile';
 
 // Axios Config (Update your backend URL)
-// axios.defaults.baseURL = "http://100.64.219.21:3001";
+// axios.defaults.baseURL = "http://100.64.201.94:3001";
+// export const BASE_URL = "http://100.64.201.94:3001";
 axios.defaults.withCredentials = true;
 
 axios.defaults.baseURL = "http://192.168.1.122:3001";
@@ -30,7 +31,7 @@ const Stack = createStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-    <Toast/> 
+    
       <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
@@ -43,6 +44,7 @@ const App = () => {
             <Stack.Screen name="SavedJobs" component={SavedJobs} />
             <Stack.Screen name="UpdateProfile" component={UpdateProfile} />
       </Stack.Navigator>
+      <Toast/> 
     </NavigationContainer>
   );
 };

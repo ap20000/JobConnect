@@ -167,6 +167,13 @@ const CompleteProfile = ({ route, navigation }) => {
       <ScrollView>
         <StyledText className="text-xl font-bold mb-6">Complete Your Profile</StyledText>
 
+          <View className="my-1 space-y-4">
+            <TextInput className="border border-gray-300 p-4 rounded-md" placeholder="Full Name" value={profileData.name} onChangeText={(value) => setProfileData({ ...profileData, name: value })} />
+            <View className="border border-gray-300 p-4 rounded-md flex-row justify-between items-center">
+              <TextInput className="flex-1" placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+              <Eye size={20} color="gray" />
+            </View>
+          </View>
         {/* Name */}
         <StyledTextInput
           className="border border-gray-300 p-3 rounded mb-4"

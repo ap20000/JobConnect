@@ -12,7 +12,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { BASE_URL } from "../App.js";
-import { useNavigation } from "@react-navigation/native";
+
 
 const Profile = ({ navigation, route }) => {
   const [user, setUser] = useState(null);
@@ -45,7 +45,7 @@ const Profile = ({ navigation, route }) => {
         const formattedUser = {
           ...response.data,
           cv: response.data.cv
-            ? `${BASE_URL}/${response.data.cv.replace("\\", "/")}`
+            ? `${BASE_URL}/uploadsCV/${response.data.cv.replace("\\", "/")}`
             : null,
         };
 

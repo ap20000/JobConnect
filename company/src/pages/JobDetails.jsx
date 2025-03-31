@@ -7,6 +7,8 @@ const JobDetails = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editJob, setEditJob] = useState(null);
+  const [updatedJob, setUpdatedJob] = useState({});
   const token = localStorage.getItem('authToken');
   const navigate = useNavigate();
 
@@ -70,7 +72,31 @@ const JobDetails = () => {
   };
 
   const handleViewApplicants = (jobId) => {
-    navigate(`/jobs/${jobId}/applicants`);  // Use URL with `/jobs/:jobId/applicants`
+    navigate(`/jobs/${jobId}/applicants`);
+  };
+
+  const handleEditJob = (job) => {
+    setEditJob(job);
+    setUpdatedJob({ ...job });
+  };
+
+  const handleUpdateJob = async () => {
+    try {
+      const response = await axios.put(
+        `http://localhost:3001/company/jobs/${jobId}`,
+        updatedJob,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setJobs((prevJobs) =>
+        prevJobs.map((job) => (job._id === editJob._id ? response.data.job : job))
+      );
+
+      setEditJob(null);
+      alert('Job updated successfully!');
+    } catch (err) {
+      alert('Failed to update job.');
+    }
   };
 
   if (loading) return <p>Loading jobs...</p>;
@@ -86,7 +112,7 @@ const JobDetails = () => {
           <thead>
             <tr>
               <th>Title</th>
-              <th>Company</th>
+              
               <th>Location</th>
               <th>Salary</th>
               <th>Actions</th>
@@ -96,7 +122,7 @@ const JobDetails = () => {
             {jobs.map((job) => (
               <tr key={job._id}>
                 <td>{job.title}</td>
-                <td>{job.company}</td>
+                
                 <td>{job.location}</td>
                 <td>{job.salary}</td>
                 <td>
@@ -112,11 +138,47 @@ const JobDetails = () => {
                   >
                     View Applicants
                   </button>
+                  <button
+                    onClick={() => handleEditJob(job)}
+                    style={{ backgroundColor: 'green', color: 'white', marginLeft: '10px' }}
+                  >
+                    Update
+                  </button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      )}
+
+      {editJob && (
+        <div style={{ marginTop: '20px', padding: '10px', border: '1px solid #ccc' }}>
+          <h2>Edit Job</h2>
+          <input
+            type="text"
+            value={updatedJob.title}
+            onChange={(e) => setUpdatedJob({ ...updatedJob, title: e.target.value })}
+            placeholder="Job Title"
+          />
+          <input
+            type="text"
+            value={updatedJob.location}
+            onChange={(e) => setUpdatedJob({ ...updatedJob, location: e.target.value })}
+            placeholder="Location"
+          />
+          <input
+            type="number"
+            value={updatedJob.salary}
+            onChange={(e) => setUpdatedJob({ ...updatedJob, salary: e.target.value })}
+            placeholder="Salary"
+          />
+          <button onClick={handleUpdateJob} style={{ backgroundColor: 'green', color: 'white' }}>
+            Save Changes
+          </button>
+          <button onClick={() => setEditJob(null)} style={{ marginLeft: '10px' }}>
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   );

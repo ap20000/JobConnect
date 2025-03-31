@@ -3,19 +3,20 @@ import React, { useState, useEffect } from "react";
 const CreateJob = ({ employerId }) => {
   const [jobData, setJobData] = useState({
     title: "",
-    position: "", // Add position field
+    position: "",
     description: "",
     location: "",
     salary: "",
     employmentType: "Full-time",
     skills: "",
+    companyName: "", // Added companyName field
   });
 
   const [message, setMessage] = useState("");
   const [token, setToken] = useState("");
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("authToken"); // Fix token key
+    const storedToken = localStorage.getItem("authToken");
     if (storedToken) {
       setToken(storedToken);
     }
@@ -45,7 +46,7 @@ const CreateJob = ({ employerId }) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ ...jobData, postedBy: employerId }), // Pass employerId as postedBy
+        body: JSON.stringify({ ...jobData, postedBy: employerId }),
       });
 
       const data = await response.json();
@@ -60,6 +61,7 @@ const CreateJob = ({ employerId }) => {
           salary: "",
           employmentType: "Full-time",
           skills: "",
+          companyName: "",
         });
       } else {
         setMessage(data.message || "Failed to post job.");
@@ -82,9 +84,9 @@ const CreateJob = ({ employerId }) => {
           value={jobData.title}
           required
         />
-         <input
+        <input
           type="text"
-          name="Position"
+          name="position"
           placeholder="Position"
           onChange={handleChange}
           value={jobData.position}
@@ -126,9 +128,17 @@ const CreateJob = ({ employerId }) => {
         <input
           type="text"
           name="skills"
-          placeholder="Skills"
+          placeholder="Skills (comma-separated)"
           onChange={handleChange}
           value={jobData.skills}
+          required
+        />
+        <input
+          type="text"
+          name="companyName"
+          placeholder="Company Name"
+          onChange={handleChange}
+          value={jobData.companyName}
           required
         />
         <button type="submit">Post Job</button>

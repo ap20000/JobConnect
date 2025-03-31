@@ -19,7 +19,7 @@ const ApplyJobScreen = ({ route, navigation }) => {
       }
 
       try {
-        const response = await axios.get(`http://192.168.1.122:3001/user/users?email=${userEmail}`, {
+        const response = await axios.get(`/user/users?email=${userEmail}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -50,7 +50,7 @@ const ApplyJobScreen = ({ route, navigation }) => {
 
     try {
       const response = await axios.post(
-        "http://192.168.1.122:3001/user/applyJob",
+        "/user/applyJob",
         { jobId },
         { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
       );
